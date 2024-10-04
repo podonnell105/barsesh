@@ -53,8 +53,8 @@ const supabase = createClient(
 // Mapbox access token
 const mapboxAccessToken = process.env.MAPBOX_ACCESS_TOKEN;
 
-// Serve static files from the 'public' directory
-app.use(express.static(path.join(__dirname, '../public')));
+// Serve static files from the 'dist' directory
+app.use(express.static(path.join(__dirname, '../dist')));
 
 // Add this middleware to ensure .js files are served with the correct MIME type
 app.use((req, res, next) => {
@@ -436,9 +436,12 @@ app.post('/api/signup', async (req, res) => {
   }
 });
 
-// Catch-all route to serve index.html
+// API routes
+app.use('/api', require('./api-routes'));
+
+// Serve index.html for any other routes to support client-side routing
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
 // Start the server
