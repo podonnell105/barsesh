@@ -6,15 +6,24 @@ require('dotenv').config();
 
 const admin = require("firebase-admin");
 
-admin.initializeApp({
-  credential: admin.credential.cert({
-    projectId: "barsesh-24655",
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
-  }),
-  databaseURL: process.env.FIREBASE_DATABASE_URL,
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET
-});
+console.log('Initializing Firebase Admin SDK');
+console.log('Node.js version:', process.version);
+console.log('OpenSSL version:', process.versions.openssl);
+
+try {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: "barsesh-24655",
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+    }),
+    databaseURL: process.env.FIREBASE_DATABASE_URL,
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET
+  });
+  console.log('Firebase Admin SDK initialized successfully');
+} catch (error) {
+  console.error('Error initializing Firebase Admin SDK:', error);
+}
 
 const bucket = admin.storage().bucket();
 
@@ -122,7 +131,7 @@ app.get('/api/event-image/:id', async (req, res) => {
 });
 
 // API endpoint to upload an image to Firebase Storage
-app.post('/api/uploadImage', (req, res) => {
+app.post('/api/uploadImage', async (req, res) => {
   const bb = busboy({ headers: req.headers });
   let fileBuffer;
   let fileName;
@@ -148,17 +157,32 @@ app.post('/api/uploadImage', (req, res) => {
       console.log('Attempting to upload file:', fileName);
       
       const file = bucket.file(`event-images/${fileName}`);
-      await file.save(fileBuffer);
-      const [url] = await file.getSignedUrl({ action: 'read', expires: '03-01-2500' });
+      const stream = file.createWriteStream({
+        metadata: {
+          contentType: 'image/jpeg', // Adjust this based on the actual file type
+        },
+        resumable: false
+      });
 
-      console.log('File uploaded successfully:', url);
+      stream.on('error', (err) => {
+        console.error('Error uploading to Firebase Storage:', err);
+        res.status(500).json({ error: 'Upload to Firebase Storage failed' });
+      });
 
-      res.status(200).json({ path: `event-images/${fileName}`, url: url });
+      stream.on('finish', async () => {
+        try {
+          const [url] = await file.getSignedUrl({ action: 'read', expires: '03-01-2500' });
+          console.log('File uploaded successfully:', url);
+          res.status(200).json({ path: `event-images/${fileName}`, url: url });
+        } catch (error) {
+          console.error('Error getting signed URL:', error);
+          res.status(500).json({ error: 'Failed to get signed URL' });
+        }
+      });
+
+      stream.end(fileBuffer);
     } catch (error) {
-      console.error('Error uploading image:', error);
-      if (error.code === 'ERR_OSSL_UNSUPPORTED') {
-        console.error('Cryptographic operation not supported. Check OpenSSL version and Node.js version.');
-      }
+      console.error('Error in upload process:', error);
       res.status(500).json({ error: error.message, code: error.code });
     }
   });
