@@ -1,6 +1,5 @@
 /* Global Styles */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap');
-
 :root {
   --primary-color: #FF6B6B;
   --secondary-color: #4ECDC4;
@@ -8,11 +7,9 @@
   --text-color: #2C3E50;
   --event-color: #6C5CE7;
 }
-
 * {
   box-sizing: border-box;
 }
-
 body {
   margin: 0;
   padding: 0;
@@ -21,12 +18,10 @@ body {
   color: var(--text-color);
   font-size: 16px;
 }
-
 html, body {
   height: 90vh;
  
 }
-
 .container {
   display: flex;
   flex-direction: column;
@@ -36,7 +31,6 @@ html, body {
   margin: 0 auto;
   padding: 1rem;
 }
-
 /* Calendar styling */
 #calendar-container {
   background-color: #FFFFFF;
@@ -47,7 +41,6 @@ html, body {
   flex-direction: column;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
-
 .calendar-header {
   display: flex;
   justify-content: space-between;
@@ -56,12 +49,10 @@ html, body {
   background-color: var(--primary-color);
   color: #FFFFFF;
 }
-
 .calendar-header h2 {
   font-size: 2rem;
   margin: 0;
 }
-
 .weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -72,7 +63,6 @@ html, body {
   padding: 0.625rem 0;
   font-size: 0.875rem;
 }
-
 .calendar-body {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -81,7 +71,6 @@ html, body {
   overflow-y: hidden;
   padding: 0;
 }
-
 .day {
   display: flex;
   flex-direction: column;
@@ -93,16 +82,13 @@ html, body {
   padding: 0.25rem;
   transition: background-color 0.3s ease, transform 0.3s ease;
 }
-
 .day strong {
   padding: 0.25rem;
 }
-
 .day:hover {
   background-color: #F9F9F9;
   transform: translateY(-2px);
 }
-
 .event-info {
   background-color: var(--event-color);
   color: white;
@@ -113,7 +99,6 @@ html, body {
   border-radius: 5px;
   width: 100%;
 }
-
 .more-events-info {
   color: black;
   font-size: 0.875rem;
@@ -122,22 +107,26 @@ html, body {
   max-width: 90%;
   display: inline-block;
 }
-
 #month-view {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
 }
-
 /* Event and Map Container */
 #event-map-container {
   display: none;
   flex: 1;
   flex-direction: row;
-  gap: 1rem;
+  
+  width: 100%;
  
 }
-
+#event-image img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin-top: 10px;
+}
 #event-list-container {
   flex: 1;
   border-radius: 16px;
@@ -147,15 +136,12 @@ html, body {
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
   height: fit-content;
 }
-
 #event-list-container h3 {
   margin-top: 0;
 }
-
 #event-list {
   margin-top: 1rem;
 }
-
 .event-item {
   background-color: var(--event-color);
   color: whitesmoke;
@@ -169,20 +155,18 @@ html, body {
   border: 1px solid black;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
-
 .event-item:hover {
   background-color: #5e88cc;
   transform: translateY(-2px);
 }
-
 #map-details-container {
   flex: 2;
   display: flex;
+  margin-left: 10px;
   flex-direction: column;
   overflow-y: scroll;
   height:80vh; /* Matches the height of event-list container */
 }
-
 /* Map Container */
 #map-container {
   background-color: #FFFFFF;
@@ -191,9 +175,7 @@ html, body {
   margin-bottom: 1rem;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
-
 /* Bar Details Container */
-
 #bar-details,
 #event-details {
   background-color: #FFFFFF;
@@ -202,19 +184,16 @@ html, body {
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
   margin-bottom: 1rem;
 }
-
 /* Margin between bar-details and event-details */
 #event-details {
   margin-top: 1rem;
 }
-
 #map {
   width: 100%;
   height: 300px;
   border-radius: 12px;
   overflow: hidden;
 }
-
 .marker {
   width: 30px;
   height: 30px;
@@ -224,33 +203,28 @@ html, body {
   border: 2px solid var(--primary-color);
   box-shadow: 0 0 0 2px #FFFFFF;
 }
-
 /* Bar details section */
 #bar-details h3 {
   font-size: 1.5rem;
   margin-bottom: 0.9375rem;
   color: var(--primary-color);
 }
-
 #bar-details p {
   margin: 0;
   font-size: 1rem;
   line-height: 1.6;
 }
-
 /* Event Details section */
 #event-details h3 {
   font-size: 1.25rem;
   margin-bottom: 0.5rem;
   color: var(--event-color);
 }
-
 #event-details p {
   font-size: 1rem;
   line-height: 1.6;
   margin: 0;
 }
-
 #back-to-calendar {
   margin-bottom: 1rem;
   background-color: var(--primary-color);
@@ -264,12 +238,91 @@ html, body {
   font-size: 0.875rem;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
-
 #back-to-calendar:hover {
   background-color: #FF8787;
   transform: translateY(-2px);
 }
-
+ /* Add Event Button */
+#add-event-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.625rem 1.25rem;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  font-weight: 600;
+  font-size: 0.875rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+#add-event-btn:hover {
+  background-color: #FF8787;
+  transform: translateY(-2px);
+}
+/* Event Form Container */
+#event-form-container {
+  background-color: #FFFFFF;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  margin: 2rem auto;
+}
+#event-form-container h2 {
+  color: var(--primary-color);
+  margin-bottom: 1.5rem;
+}
+#new-event-form {
+  display: flex;
+  flex-direction: column;
+}
+#new-event-form label {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+#new-event-form input,
+#new-event-form select,
+#new-event-form textarea {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+#new-event-form button {
+  margin-top: 1.5rem;
+  padding: 0.625rem 1.25rem;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  font-weight: 600;
+  font-size: 0.875rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+#new-event-form button[type="submit"] {
+  background-color: var(--primary-color);
+  color: white;
+}
+#new-event-form button[type="submit"]:hover {
+  background-color: #FF8787;
+  transform: translateY(-2px);
+}
+#new-event-form button[type="button"] {
+  background-color: #ccc;
+  color: var(--text-color);
+}
+#new-event-form button[type="button"]:hover {
+  background-color: #bbb;
+  transform: translateY(-2px);
+}
+/* Hide calendar when form is shown */
+#event-form-container:not([style*="display: none"]) ~ #calendar-container {
+  display: none;
+}
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .container {
@@ -282,34 +335,28 @@ html, body {
   #event-map-container {
     flex-direction: column;
   }
-
   #event-list-container {
     margin-bottom: 1rem;
   }
-
   #event-list {
     max-height: 200px;
     overflow-y: auto;
     border: #2C3E50;
   }
-
   #map {
     height: 200px;
+    width: 100%;
   }
-
   .event-info {
     padding: 2px;
   }
-
   .event-info,
   .more-events-info {
     font-size: 0.6rem;
   }
-
   .day {
     align-items: flex-start;
   }
-
   .event-info {
     max-width: 100%;
   }
