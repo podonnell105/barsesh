@@ -64,6 +64,14 @@ app.use((req, res, next) => {
   next();
 });
 
+// Add this middleware to ensure .html files are served with the correct MIME type
+app.use((req, res, next) => {
+  if (req.url.endsWith('.html')) {
+    res.type('text/html');
+  }
+  next();
+});
+
 // Route for signin page
 app.get('/signin', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/signin.html'));
