@@ -74,12 +74,12 @@ app.use((req, res, next) => {
 
 // Route for signin page
 app.get('/signin', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/signin.html'));
+  res.sendFile(path.join(__dirname, '../dist/signin.html'));
 });
 
 // Route for signup page
 app.get('/signup', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/signup.html'));
+  res.sendFile(path.join(__dirname, '../dist/signup.html'));
 });
 
 // Endpoint to serve Mapbox access token
@@ -436,10 +436,7 @@ app.post('/api/signup', async (req, res) => {
   }
 });
 
-// API routes
-app.use('/api', require('./api-routes'));
-
-// Serve index.html for any other routes to support client-side routing
+// Catch-all route to serve index.html
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
