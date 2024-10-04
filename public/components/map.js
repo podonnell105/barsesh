@@ -2,23 +2,39 @@ let map;
 
 function initializeMap(mapboxToken) {
     mapboxgl.accessToken = mapboxToken;
-    map = new mapboxgl.Map({
-        container: 'map',
-        style: 'mapbox://styles/odonnellpatrick055/cm0myh1iy00de01o3fh1h1aek',
-        center: [-5.9, 54.59],
-        zoom: 7
+    
+    const observer = new MutationObserver((mutations) => {
+        for (let mutation of mutations) {
+            if (mutation.type === 'childList') {
+                const mapContainer = document.getElementById('map');
+                if (mapContainer) {
+                    observer.disconnect();
+                    createMap(mapContainer);
+                    break;
+                }
+            }
+        }
     });
 
-    map.on('load', () => {
-        fetchAndAddMarkers(map);
-        // Force the map to resize after load
-        map.resize();
-    });
+    observer.observe(document.body, { childList: true, subtree: true });
 
-    // Add a window resize listener
-    window.addEventListener('resize', () => {
-        map.resize();
-    });
+    function createMap(container) {
+        map = new mapboxgl.Map({
+            container: container,
+            style: 'mapbox://styles/odonnellpatrick055/cm0myh1iy00de01o3fh1h1aek',
+            center: [-5.9, 54.59],
+            zoom: 7
+        });
+
+        map.on('load', () => {
+            fetchAndAddMarkers(map);
+            map.resize();
+        });
+
+        window.addEventListener('resize', () => {
+            map.resize();
+        });
+    }
 
     return map;
 }
