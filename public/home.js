@@ -1,4 +1,3 @@
-
 import { createCalendar } from './components/calender.js';
 import { initializeMap, displayBar } from './components/map.js';
 import { showEventForm } from './components/newEvent.js';
@@ -15,9 +14,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     createHTMLElements();
     const map = initializeMap(mapboxToken);
     const events = await fetchEvents();
-    createCalendar(events);
+    if (events.length > 0) {
+        createCalendar(events);
+    } else {
+        console.log('No events fetched');
+        document.getElementById('calendar').innerHTML = '<p>No events available</p>';
+    }
 
+    // Add event listener for the "Add Event" button
     document.getElementById('add-event-btn').addEventListener('click', showEventForm);
+
+    // Add event listener for the "Sign In" button
+    document.getElementById('sign-in-btn').addEventListener('click', () => {
+        window.location.href = '/signin';
+    });
+
+    // Add event listener for the "Sign Up" button
+    document.getElementById('sign-up-btn').addEventListener('click', () => {
+        window.location.href = '/signup';
+    });
 });
 
 async function fetchMapboxToken() {
@@ -38,6 +53,8 @@ function createHTMLElements() {
     document.body.innerHTML = `
     <h3>BarSesh | Belfast</h3>
     <button id="add-event-btn">Add Event</button>
+    <button id="sign-in-btn">Sign In</button>
+    <button id="sign-up-btn">Sign Up</button>
     <div id="main-container" class="container">
         <div id="calendar-container">
             <div id="calendar"></div>
@@ -49,15 +66,12 @@ function createHTMLElements() {
                 <div id="event-list"></div>
             </div>
             <div id="map-details-container">
-           
-            <div id="event-image"></div>
+                <div id="event-image"></div>
                 <div id="event-details"></div>
-               
                 <div id="map-container">
                     <div id="map"></div>
                 </div>
                 <div id="bar-details"></div>
-                
             </div>
         </div>
         <div id="event-form-container" style="display: none;"></div>
