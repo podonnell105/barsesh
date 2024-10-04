@@ -3,6 +3,10 @@ const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 const busboy = require('busboy');
 require('dotenv').config();
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+const bcrypt = require('bcrypt');
+
 
 const admin = require("firebase-admin");
 
@@ -29,6 +33,10 @@ const bucket = admin.storage().bucket();
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
+
+// Secret key for JWT (store this securely, preferably in an environment variable)
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -46,7 +54,25 @@ const supabase = createClient(
 const mapboxAccessToken = process.env.MAPBOX_ACCESS_TOKEN;
 
 // Serve static files from the 'public' directory
-app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use(express.static('public'));
+
+// Add this middleware to ensure .js files are served with the correct MIME type
+app.use((req, res, next) => {
+  if (req.url.endsWith('.js')) {
+    res.type('application/javascript');
+  }
+  next();
+});
+
+// Route for signin page
+app.get('/signin', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/signin.html'));
+});
+
+// Route for signup page
+app.get('/signup', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/signup.html'));
+});
 
 // Endpoint to serve Mapbox access token
 app.get('/api/config', (req, res) => {
@@ -63,10 +89,27 @@ app.get('/api/events', async (req, res) => {
     }
     res.json(data);
   } catch (error) {
-    console.error('Error fetching events:', error.message);
-    res.status(500).json({ error: error.message });
+    console.error('Error fetching events:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// Middleware to authenticate user
+function authenticateUser(req, res, next) {
+  const token = req.cookies.token;
+
+  if (!token) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+}
 
 // API endpoint to fetch all bars
 app.get('/api/bars', async (req, res) => {
@@ -282,16 +325,112 @@ app.post('/api/addBar', async (req, res) => {
   }
 });
 
+// Signin endpoint
+app.post('/api/signin', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // Fetch user from Supabase
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (error || !user) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Verify password
+    const passwordMatch = await bcrypt.compare(password, user.password_hash);
+
+    if (!passwordMatch) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Create a JWT token
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      JWT_SECRET,
+      { expiresIn: '1h' } // Token expires in 1 hour
+    );
+
+    // Set the token in an HTTP-only cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+      sameSite: 'strict',
+      maxAge: 3600000 // 1 hour in milliseconds
+    });
+
+    // Send success response
+    res.json({
+      message: 'Login successful',
+      id: user.id,
+      email: user.email
+    });
+  } catch (error) {
+    console.error('Signin error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Signout endpoint
+app.post('/api/signout', (req, res) => {
+  res.clearCookie('token');
+  res.json({ message: 'Signed out successfully' });
+});
+
+// Signup endpoint
+app.post('/api/signup', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // Input validation
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+
+    // Password strength check
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    }
+
+    // Hash the password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Insert new user into Supabase
+    const { data, error } = await supabase
+      .from('users')
+      .insert([{ email, password_hash: hashedPassword }])
+      .select();
+
+    if (error) {
+      if (error.code === '23505') { // Unique constraint violation
+        return res.status(409).json({ error: 'User with this email already exists' });
+      }
+      throw error;
+    }
+
+    // Send success response
+    res.status(201).json({ message: 'Signup successful' });
+
+  } catch (error) {
+    console.error('Signup error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Catch-all route to serve index.html
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../public', 'index.html'));
-});
-
-app.use((req, res, next) => {
-  if (req.url.endsWith('.js')) {
-    res.type('application/javascript');
-  }
-  next();
 });
 
 // Start the server
