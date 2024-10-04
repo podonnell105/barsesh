@@ -166,7 +166,7 @@ app.post('/api/uploadImage', async (req, res) => {
 
       stream.on('error', (err) => {
         console.error('Error uploading to Firebase Storage:', err);
-        res.status(500).json({ error: 'Upload to Firebase Storage failed' });
+        res.status(500).json({ error: 'Upload to Firebase Storage failed', details: err.message, stack: err.stack });
       });
 
       stream.on('finish', async () => {
@@ -176,14 +176,14 @@ app.post('/api/uploadImage', async (req, res) => {
           res.status(200).json({ path: `event-images/${fileName}`, url: url });
         } catch (error) {
           console.error('Error getting signed URL:', error);
-          res.status(500).json({ error: 'Failed to get signed URL' });
+          res.status(500).json({ error: 'Failed to get signed URL', details: error.message, stack: error.stack });
         }
       });
 
       stream.end(fileBuffer);
     } catch (error) {
       console.error('Error in upload process:', error);
-      res.status(500).json({ error: error.message, code: error.code });
+      res.status(500).json({ error: 'Error in upload process', details: error.message, stack: error.stack });
     }
   });
 
