@@ -6,9 +6,13 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        signin: resolve(__dirname, 'public/signin.html'),
-        signup: resolve(__dirname, 'public/signup.html')
+        signin: resolve(__dirname, 'signin.html'),
+        signup: resolve(__dirname, 'signup.html')
       }
     }
+  },
+  publicDir: 'public',
+  server: {
+    open: true // This will open the browser automatically
   }
 });
