@@ -5,11 +5,11 @@
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
-  "start": "node api/index.js",
-  "dev": "vite",
-  "build": "vite build",
-  "preview": "vite preview"
-},
+    "start": "node api/index.js",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
     "busboy": "^1.6.0",
