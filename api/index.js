@@ -54,7 +54,7 @@ const supabase = createClient(
 const mapboxAccessToken = process.env.MAPBOX_ACCESS_TOKEN;
 
 // Serve static files from the 'public' directory
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Add this middleware to ensure .js files are served with the correct MIME type
 app.use((req, res, next) => {
