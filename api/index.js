@@ -156,7 +156,10 @@ app.post('/api/uploadImage', (req, res) => {
       res.status(200).json({ path: `event-images/${fileName}`, url: url });
     } catch (error) {
       console.error('Error uploading image:', error);
-      res.status(500).json({ error: error.message });
+      if (error.code === 'ERR_OSSL_UNSUPPORTED') {
+        console.error('Cryptographic operation not supported. Check OpenSSL version and Node.js version.');
+      }
+      res.status(500).json({ error: error.message, code: error.code });
     }
   });
 
