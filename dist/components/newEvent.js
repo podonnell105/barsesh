@@ -203,12 +203,20 @@ function showAddLocationOverlay() {
 }
 
 export function showEventForm() {
-    const formContainer = document.getElementById('event-form-container');
-    const calendarContainer = document.getElementById('calendar-container');
-    const eventMapContainer = document.getElementById('event-map-container');
+    let formContainer = document.getElementById('event-form-container');
+    if (!formContainer) {
+        formContainer = document.createElement('div');
+        formContainer.id = 'event-form-container';
+        document.body.appendChild(formContainer);
+    }
     formContainer.style.display = 'block';
-    calendarContainer.style.display = 'none';
-    eventMapContainer.style.display = 'none'; // Hide event map container
+
+    // We don't need to hide these containers in the manageEvents page
+    // const calendarContainer = document.getElementById('calendar-container');
+    // const eventMapContainer = document.getElementById('event-map-container');
+    // if (calendarContainer) calendarContainer.style.display = 'none';
+    // if (eventMapContainer) eventMapContainer.style.display = 'none';
+
     formContainer.innerHTML = `
         <h2>Add New Event</h2>
         <form id="new-event-form" enctype="multipart/form-data">
@@ -245,8 +253,6 @@ export function showEventForm() {
     // Modify the event listener for the add location button
     const addLocationBtn = document.getElementById('add-location-btn');
     addLocationBtn.addEventListener('click', showAddLocationOverlay);
-
-    // Remove the existing event listeners for the add location form
 
     // Add event listener to the newly created form
     const newEventForm = document.getElementById('new-event-form');
@@ -300,10 +306,24 @@ async function handleEventSubmit(event) {
         starttime: formData.get('event-start-time'),
         endtime: formData.get('event-end-time'),
         description: formData.get('description'),
-        barid: barNameToIdMap[formData.get('event-bar')]
+        barid: barNameToIdMap[formData.get('event-bar')],
+        user_id: document.body.getAttribute('data-user-id')
     };
 
-    if (!eventData.title || !eventData.startdate || !eventData.starttime || !eventData.endtime || !eventData.barid) {
+    console.log('Event data before submission:', eventData);
+
+    // Include userId in the event data
+    eventData.organiserid = eventData.user_id;
+
+    if (!eventData.title || !eventData.startdate || !eventData.starttime || !eventData.endtime || !eventData.barid || !eventData.organiserid) {
+        console.log('Missing fields:', {
+            title: !eventData.title,
+            startdate: !eventData.startdate,
+            starttime: !eventData.starttime,
+            endtime: !eventData.endtime,
+            barid: !eventData.barid,
+            organiserid: !eventData.organiserid
+        });
         alert('Please fill in all required fields');
         return;
     }

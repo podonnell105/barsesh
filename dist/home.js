@@ -2,59 +2,23 @@ import { createCalendar } from './components/calender.js';
 import { initializeMap, displayBar } from './components/map.js';
 import { showEventForm } from './components/newEvent.js';
 
-let tempBarID = null;
+// Make displayBar available globally
+window.displayBar = displayBar;
 
-document.addEventListener('DOMContentLoaded', async () => {
-    const mapboxToken = await fetchMapboxToken();
-    if (!mapboxToken) {
-        console.error('Mapbox access token not available');
-        return;
-    }
-
-    createHTMLElements();
-    const map = initializeMap(mapboxToken);
-    const events = await fetchEvents();
-    if (events.length > 0) {
-        createCalendar(events);
-    } else {
-        console.log('No events fetched');
-        document.getElementById('calendar').innerHTML = '<p>No events available</p>';
-    }
-
-    // Add event listener for the "Add Event" button
-    document.getElementById('add-event-btn').addEventListener('click', showEventForm);
-
-    // Add event listener for the "Sign In" button
-    document.getElementById('sign-in-btn').addEventListener('click', () => {
-        window.location.href = '/signin';
-    });
-
-    // Add event listener for the "Sign Up" button
-    document.getElementById('sign-up-btn').addEventListener('click', () => {
-        window.location.href = '/signup';
-    });
-});
-
-async function fetchMapboxToken() {
-    try {
-        const response = await fetch('/api/config');
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-        return data.mapboxToken;
-    } catch (error) {
-        console.error('Error fetching Mapbox token:', error);
-        return null;
-    }
+function logButtonClick(buttonName) {
+    console.log(`Button clicked: ${buttonName}`);
 }
 
 function createHTMLElements() {
+    console.log('Creating HTML elements...');
     document.body.innerHTML = `
-    <h3>BarSesh | Belfast</h3>
-    <button id="add-event-btn">Add Event</button>
-    <button id="sign-in-btn">Sign In</button>
-    <button id="sign-up-btn">Sign Up</button>
+    <div id="header">
+        <h3>BarSesh | Belfast</h3>
+        <div id="button-container">
+            <button id="sign-in-btn">Sign In</button>
+            <button id="sign-up-btn">Sign Up</button>
+        </div>
+    </div>
     <div id="main-container" class="container">
         <div id="calendar-container">
             <div id="calendar"></div>
@@ -77,6 +41,79 @@ function createHTMLElements() {
         <div id="event-form-container" style="display: none;"></div>
     </div>
     `;
+    console.log('HTML elements added to body');
+
+    // Attach event listeners after creating elements
+    document.getElementById('sign-in-btn').addEventListener('click', () => {
+        logButtonClick('Sign In');
+        window.location.href = '/signin';
+    });
+
+    document.getElementById('sign-up-btn').addEventListener('click', () => {
+        logButtonClick('Sign Up');
+        window.location.href = '/signup';
+    });
+    console.log('Event listeners attached');
+}
+
+function checkUserLoggedIn() {
+    const user = JSON.parse(sessionStorage.getItem('user'));
+    if (user) {
+        document.getElementById('sign-in-btn').style.display = 'none';
+        document.getElementById('sign-up-btn').style.display = 'none';
+        const manageEventsBtn = document.createElement('button');
+        manageEventsBtn.id = 'manage-events-btn';
+        manageEventsBtn.textContent = 'Manage Events';
+        manageEventsBtn.addEventListener('click', () => {
+            logButtonClick('Manage Events');
+            window.location.href = `/manageEvents/${user.id}`;
+        });
+        document.getElementById('button-container').appendChild(manageEventsBtn);
+    }
+}
+
+async function initializePage() {
+    console.log('Initializing page...');
+    createHTMLElements();
+    console.log('HTML elements created');
+    checkUserLoggedIn();
+    console.log('User login checked');
+
+    const mapboxToken = await fetchMapboxToken();
+    if (!mapboxToken) {
+        console.error('Mapbox access token not available');
+        return;
+    }
+
+    const map = initializeMap(mapboxToken);
+
+    const events = await fetchEvents();
+    if (events.length > 0) {
+        createCalendar(events);
+        console.log('Calendar created with events');
+    } else {
+        console.log('No events fetched');
+        document.getElementById('calendar').innerHTML = '<p>No events available</p>';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded event fired');
+    initializePage();
+});
+
+async function fetchMapboxToken() {
+    try {
+        const response = await fetch('/api/mapbox-token');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        return data.mapboxToken;
+    } catch (error) {
+        console.error('Error fetching Mapbox token:', error);
+        return null;
+    }
 }
 
 async function fetchEvents() {
@@ -86,26 +123,19 @@ async function fetchEvents() {
             throw new Error('Network response was not ok');
         }
         const data = await response.json();
-
-        const events = data.map(event => {
-            console.log('Raw event data:', event); // Log raw event data
-            return {
-                id: event.id,
-                title: event.title,
-                barID: event.barid,
-                startDate: event.startdate,
-                endDate: event.enddate,
-                startTime: convertTo24HourTime(event.starttime),
-                endTime: convertTo24HourTime(event.endtime),
-                description: event.description,
-                image_url: event.image_url
-            };
-        });
-
-        console.log('Processed events:', events);
-        return events;
+        return data.map(event => ({
+            id: event.id,
+            title: event.title,
+            barID: event.barid,
+            startDate: event.startdate,
+            endDate: event.enddate,
+            startTime: event.starttime,
+            endTime: event.endtime,
+            description: event.description,
+            image_url: event.image_url
+        }));
     } catch (error) {
-        console.error('Error fetching events:', error.message);
+        console.error('Error fetching events:', error);
         return [];
     }
 }
@@ -125,7 +155,4 @@ function convertTo24HourTime(timeString) {
 
     return `${hours}:${minutes}`;
 }
-
-// Make displayBar available globally
-window.displayBar = displayBar;
 
