@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
-        credentials: 'include' // This is important for including cookies
+        credentials: 'include' // Important for including cookies
       });
 
       const data = await response.json();
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // Display success message
-      alert(data.message); // This will show "Login successful"
+      alert(data.message); // Shows "Login successful"
 
       // Store minimal user data in sessionStorage
       sessionStorage.setItem('user', JSON.stringify({
@@ -32,8 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
         email: data.email
       }));
 
-      // Redirect to the main page
-      window.location.href = '/';
+      // Redirect to the manage events page with the user ID
+      window.location.href = `/manageEvents/${data.id}`;
     } catch (error) {
       console.error('Sign in error:', error);
       alert(error.message || 'Failed to sign in. Please try again.');
