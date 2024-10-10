@@ -49,7 +49,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const mapboxAccessToken = process.env.MAPBOX_ACCESS_TOKEN;
 
 // Export the token for use in other parts of the application
-module.exports = { mapboxAccessToken };
+exports.mapboxAccessToken = mapboxAccessToken;
 
 // ---------------------- API Routes ----------------------
 
@@ -385,3 +385,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
+
+module.exports = app;
