@@ -16,8 +16,7 @@
     { "handle": "filesystem" },
     { "src": "/signin", "dest": "/signin.html" },
     { "src": "/signup", "dest": "/signup.html" },
-    { "src": "/(.*)", "dest": "/index.html" },
-    { "src": "/manageEvents/(.*)", "dest": "/manageEvents.html" }
-   
+    { "src": "/manageEvents/(.*)", "dest": "/manageEvents.html" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }

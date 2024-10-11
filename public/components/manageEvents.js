@@ -2,6 +2,7 @@ import { showEventForm } from './newEvent.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('ManageEvents script loaded');
+    console.log('Current URL:', window.location.href);
     const userId = window.location.pathname.split('/').pop();
     const userEventsList = document.getElementById('user-events-list');
     console.log('ManageEvents Page Loaded for User ID:', userId);

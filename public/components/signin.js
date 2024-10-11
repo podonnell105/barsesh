@@ -32,8 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         email: data.email
       }));
 
-      // Redirect to the manage events page with the user ID
-      window.location.href = `/manageEvents/${data.id}`;
+      
     } catch (error) {
       console.error('Sign in error:', error);
       alert(error.message || 'Failed to sign in. Please try again.');
