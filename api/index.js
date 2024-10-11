@@ -417,6 +417,37 @@ app.delete('/api/events/:id', authenticateUser, async (req, res) => {
   const eventId = req.params.id;
 
   try {
+    // First, fetch the event details to get the image URL
+    const { data: event, error: fetchError } = await supabase
+      .from('events')
+      .select('image_url')
+      .eq('id', eventId)
+      .single();
+
+    if (fetchError) {
+      console.error('Supabase error fetching event:', fetchError);
+      return res.status(500).json({ error: 'Failed to fetch event details' });
+    }
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // If there's an image associated with the event, delete it from Firebase Storage
+    if (event.image_url) {
+      const imageFileName = event.image_url.split('/').pop().split('?')[0];
+      const file = bucket.file(`event-images/${imageFileName}`);
+
+      try {
+        await file.delete();
+        console.log(`Deleted image: ${imageFileName}`);
+      } catch (deleteError) {
+        console.error('Error deleting image from Firebase:', deleteError);
+        // Continue with event deletion even if image deletion fails
+      }
+    }
+
+    // Now delete the event from Supabase
     const { data, error } = await supabase
       .from('events')
       .delete()
@@ -427,11 +458,7 @@ app.delete('/api/events/:id', authenticateUser, async (req, res) => {
       throw error;
     }
 
-    if (data.length === 0) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
-
-    res.json({ message: 'Event deleted successfully' });
+    res.json({ message: 'Event and associated image deleted successfully' });
   } catch (error) {
     console.error('Error deleting event:', error);
     res.status(500).json({ error: 'Failed to delete event' });
