@@ -68,7 +68,6 @@ function checkUserLoggedIn() {
             logButtonClick('Manage Events');
             window.location.href = `/manageEvents/${user.id}`;
         });
-        document.getElementById('button-container').appendChild(manageEventsBtn);
     }
 }
 
