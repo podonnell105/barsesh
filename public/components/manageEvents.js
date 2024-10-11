@@ -8,16 +8,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Set the data-user-id attribute on the body
     document.body.setAttribute('data-user-id', userId);
 
-    // Create header
-    const header = document.createElement('div');
-    header.id = 'header';
-    header.innerHTML = `
-        <h3>BarSesh | Belfast</h3>
-        <div id="button-container">
-            <button id="add-event-btn">Add Event</button>
-        </div>
-    `;
-    document.body.insertBefore(header, document.body.firstChild);
+    // Create header if it doesn't exist
+    if (!document.getElementById('header')) {
+        const header = document.createElement('div');
+        header.id = 'header';
+        header.innerHTML = `
+            <h3>BarSesh | Belfast</h3>
+            <div id="button-container">
+                <button id="add-event-btn">Add Event</button>
+            </div>
+        `;
+        document.body.insertBefore(header, document.body.firstChild);
+    }
 
     const addEventBtn = document.getElementById('add-event-btn');
     addEventBtn.addEventListener('click', () => {

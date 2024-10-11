@@ -387,9 +387,6 @@ app.get('/api/mapbox-token', (req, res) => {
 });
 // ---------------------- API Routes ----------------------
 
-// Serve static files from the 'dist' directory
-app.use(express.static(path.join(__dirname, '../dist')));
-
 // HTML routes
 app.get('/signin', (req, res) => {
   res.sendFile(path.join(__dirname, '../dist/signin.html'));
@@ -402,6 +399,9 @@ app.get('/signup', (req, res) => {
 app.get('/manageEvents/:id', (_, res) => {
   res.sendFile(path.join(__dirname, '../dist/manageEvents.html'));
 });
+
+// Serve static files
+app.use(express.static(path.join(__dirname, '../dist')));
 
 // Catch-all route to serve index.html
 app.get('*', (_, res) => {
