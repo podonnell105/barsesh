@@ -18,5 +18,8 @@
     { "src": "/signup", "dest": "/signup.html" },
     { "src": "/(.*)", "dest": "/index.html" },
     { "src": "/manageEvents", "dest": "/manageEvents.html" }
-  ]
+  ],
+  "rewrites": [
+       { "source": "/manageEvents/:id", "destination": "/manageEvents.html" }
+     ]
 }
