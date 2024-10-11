@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         email: data.email
       }));
 
-      
+      window.location.href = '/index.html';
     } catch (error) {
       console.error('Sign in error:', error);
       alert(error.message || 'Failed to sign in. Please try again.');
