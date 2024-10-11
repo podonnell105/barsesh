@@ -6,14 +6,18 @@
       "use": "@vercel/node"
     },
     {
-      "src": "dist/**",
-      "use": "@vercel/static"
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist" }
     }
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/index.js" },
-    { "src": "/manageEvents/(.*)", "dest": "/manageEvents.html" },
-    { "src": "/manageEvents", "dest": "/manageEvents.html" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    { "handle": "filesystem" },
+    { "src": "/signin", "dest": "/signin.html" },
+    { "src": "/signup", "dest": "/signup.html" },
+    { "src": "/(.*)", "dest": "/index.html" },
+    { "src": "/manageEvents/(.*)", "dest": "/manageEvents.html" }
+   
   ]
 }
