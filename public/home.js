@@ -71,6 +71,7 @@ function checkUserLoggedIn() {
     }
 }
 
+
 async function initializePage() {
     console.log('Initializing page...');
     createHTMLElements();
