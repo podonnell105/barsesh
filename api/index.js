@@ -399,7 +399,7 @@ app.get('/signup', (req, res) => {
   res.sendFile(path.join(__dirname, '../dist/signup.html'));
 });
 
-app.get('/manageEvents/:id', (req, res) => {
+app.get('/manageEvents/:id', (_, res) => {
   res.sendFile(path.join(__dirname, '../dist/manageEvents.html'));
 });
 
