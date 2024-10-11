@@ -58,9 +58,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p>Date: ${new Date(event.startdate).toLocaleDateString()}</p>
                 <p>Time: ${convertTo24HourTime(event.starttime)} - ${convertTo24HourTime(event.endtime)}</p>
                 <button onclick="editEvent(${event.id})">Edit</button>
-                <button onclick="deleteEvent(${event.id})">Delete</button>
+                <button class="delete-event-btn" data-event-id="${event.id}">Delete</button>
             `;
             userEventsList.appendChild(eventTile);
+        });
+
+        // Add event listeners for delete buttons
+        const deleteButtons = document.querySelectorAll('.delete-event-btn');
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const eventId = this.getAttribute('data-event-id');
+                deleteEvent(eventId);
+            });
         });
     }
 
@@ -122,21 +131,18 @@ function editEvent(eventId) {
 }
 
 function deleteEvent(eventId) {
-    // Implement delete functionality
     console.log('Delete event:', eventId);
 
     if (confirm('Are you sure you want to delete this event?')) {
         fetch(`/api/events/${eventId}`, {
             method: 'DELETE',
-            credentials: 'include' // Include cookies for authentication
+            credentials: 'include'
+             // Include cookies for authentication
         })
-        .then(response => response.json())
+        
         .then(data => {
-            if (data.error) {
-                throw new Error(data.error);
-            }
             alert('Event deleted successfully');
-            // Reload the events list
+            
             window.location.reload();
         })
         .catch(error => {

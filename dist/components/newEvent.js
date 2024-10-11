@@ -402,14 +402,20 @@ async function handleNewLocationSubmit(event) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(locationData),
+            credentials: 'include' // Include cookies for authentication
         });
 
         if (!response.ok) {
-            throw new Error('Failed to add location');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to add location');
         }
 
         const result = await response.json();
         console.log('New location added:', JSON.stringify(result, null, 2));
+
+        if (!result || result.length === 0) {
+            throw new Error('No data returned from server');
+        }
 
         // Add the new location to the select options
         const barSelect = document.getElementById('event-bar');
@@ -426,7 +432,7 @@ async function handleNewLocationSubmit(event) {
         alert('Location added successfully!');
     } catch (error) {
         console.error('Error adding location:', error);
-        alert('Failed to add location. Please try again.');
+        alert(error.message || 'Failed to add location. Please try again.');
     }
 }
 

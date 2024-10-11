@@ -351,7 +351,35 @@ app.post('/api/signup', async (req, res) => {
   }
 });
 
+// API endpoint to add a new bar/location
+app.post('/api/addBar', authenticateUser, async (req, res) => {
+  const { name, details, address, location_type, latitude, longitude } = req.body;
 
+  try {
+    const { data, error } = await supabase
+      .from('bars')
+      .insert([
+        {
+          name,
+          details,
+          address,
+          location_type,
+          lat: latitude,
+          long: longitude
+        }
+      ])
+      .select(); // Ensure you select the inserted data
+
+    if (error) {
+      throw error;
+    }
+
+    res.status(201).json(data);
+  } catch (error) {
+    console.error('Error adding new bar:', error);
+    res.status(500).json({ error: 'Failed to add new bar' });
+  }
+});
 
 // API endpoint to get Mapbox access token
 app.get('/api/mapbox-token', (req, res) => {
@@ -384,6 +412,32 @@ app.get('*', (_, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
+});
+
+// API endpoint to delete an event
+app.delete('/api/events/:id', authenticateUser, async (req, res) => {
+  const eventId = req.params.id;
+
+  try {
+    const { data, error } = await supabase
+      .from('events')
+      .delete()
+      .eq('id', eventId);
+
+    if (error) {
+      console.error('Supabase error deleting event:', error);
+      throw error;
+    }
+
+    if (data.length === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    res.json({ message: 'Event deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting event:', error);
+    res.status(500).json({ error: 'Failed to delete event' });
+  }
 });
 
 module.exports = app;
