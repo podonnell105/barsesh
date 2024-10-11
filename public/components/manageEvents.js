@@ -61,7 +61,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <h3>${event.title}</h3>
                 <p>Date: ${new Date(event.startdate).toLocaleDateString()}</p>
                 <p>Time: ${convertTo24HourTime(event.starttime)} - ${convertTo24HourTime(event.endtime)}</p>
-                <button onclick="editEvent(${event.id})">Edit</button>
                 <button class="delete-event-btn" data-event-id="${event.id}">Delete</button>
             `;
             userEventsList.appendChild(eventTile);
@@ -125,14 +124,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Override the hideEventForm function
     window.hideEventForm = showExistingElements;
 });
-
-
-
-// Placeholder functions for editing and deleting events
-function editEvent(eventId) {
-    // Implement edit functionality
-    console.log('Edit event:', eventId);
-}
 
 function deleteEvent(eventId) {
     console.log('Delete event:', eventId);
