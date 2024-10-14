@@ -81,6 +81,15 @@ function authenticateUser(req, res, next) {
   }
 }
 
+// API endpoint to fetch user-specific events
+app.get('/api/manageEvents/:id', authenticateUser, async (req, res) => {
+  // Check if the authenticated user's ID matches the requested ID
+  if (req.user.id !== parseInt(req.params.id, 10)) {
+    return res.status(403).json({ error: 'Unauthorized access' });
+  }
+  res.sendFile(path.join(__dirname, '../dist/manageEvents.html'));
+});
+
 // API endpoint to fetch all events
 app.get('/api/events', async (req, res) => {
   try {
