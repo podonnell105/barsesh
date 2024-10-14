@@ -7,10 +7,21 @@ const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcrypt');
 const admin = require("firebase-admin");
+const cors = require('cors');
 
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+
+// CORS configuration
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production' 
+    ? 'https://barsesh.com' 
+    : 'http://localhost:3000',
+  credentials: true
+};
+
+app.use(cors(corsOptions));
 
 // Initialize Firebase Admin SDK
 try {
@@ -289,8 +300,9 @@ app.post('/api/signin', async (req, res) => {
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production' ? 'None' : 'Strict',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+      domain: process.env.NODE_ENV === 'production' ? '.barsesh.com' : undefined,
       maxAge: 3600000
     });
 
