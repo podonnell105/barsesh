@@ -58,7 +58,7 @@ function authenticateUser(req, res, next) {
   const token = req.cookies.token;
 
   if (!token) {
-    return res.status(401).json({ error: 'Authentication required' });
+    return res.status(401).json({ error: 'Authentication required', redirectTo: '/signin' });
   }
 
   try {
@@ -66,7 +66,7 @@ function authenticateUser(req, res, next) {
     req.user = decoded;
     next();
   } catch (error) {
-    return res.status(401).json({ error: 'Invalid token' });
+    return res.status(401).json({ error: 'Invalid token', redirectTo: '/signin' });
   }
 }
 
@@ -397,7 +397,12 @@ app.get('/signup', (req, res) => {
   res.sendFile(path.join(__dirname, '../dist/signup.html'));
 });
 
-app.get('/manageEvents/:id', (req, res) => {
+app.get('/manageEvents/:id', authenticateUser, (req, res) => {
+  // Check if the authenticated user's ID matches the requested ID
+  if (req.user.id !== parseInt(req.params.id, 10)) {
+    res.sendFile(path.join(__dirname, '../dist/signin.html'));
+    return res.status(403).json({ error: 'Unauthorized access' });
+  }
   res.sendFile(path.join(__dirname, '../dist/manageEvents.html'));
 });
 
