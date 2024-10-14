@@ -289,8 +289,8 @@ app.post('/api/signin', async (req, res) => {
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production' ? 'None' : 'Strict',
       maxAge: 3600000
     });
 
