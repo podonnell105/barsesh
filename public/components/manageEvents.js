@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const userId = window.location.pathname.split('/').pop();
     
     try {
-        const response = await fetch(`/manageEvents/${userId}`, {
+        const response = await fetch(`/api/manageEvents/${userId}`, {
             method: 'GET',
             credentials: 'include'
         });
@@ -52,7 +52,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         async function fetchUserEvents(ID) {
             console.log(ID);
             try {
-                const response = await fetch(`/api/user-events/${ID}`);
+                const response = await fetch(`/api/user-events/${ID}`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
                 if (!response.ok) {
                     throw new Error('Failed to fetch events');
                 }
