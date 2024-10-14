@@ -365,7 +365,26 @@ app.post('/api/signup', async (req, res) => {
       throw error;
     }
 
-    res.status(201).json({ message: 'Signup successful' });
+    // Create JWT token
+    const token = jwt.sign(
+      { id: data[0].id, email: data[0].email },
+      JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    // Set cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+      maxAge: 3600000 // 1 hour
+    });
+
+    res.status(201).json({ 
+      message: 'Signup successful',
+      id: data[0].id,
+      email: data[0].email
+    });
   } catch (error) {
     console.error('Signup error:', error);
     res.status(500).json({ error: 'Internal server error' });

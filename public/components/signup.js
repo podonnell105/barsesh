@@ -38,19 +38,26 @@ document.addEventListener('DOMContentLoaded', () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
+        credentials: 'include'
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Signup failed');
+        throw new Error(data.error || 'Signup failed');
       }
 
-      const result = await response.json();
-      alert(result.message); // Should show "Signup successful"
-      
-      // Redirect to the main page
-      window.location.href = '/';
+      // Display success message
+      alert(data.message);
 
+      // Store minimal user data in sessionStorage
+      sessionStorage.setItem('user', JSON.stringify({
+        id: data.id,
+        email: data.email
+      }));
+
+      // Redirect to home page
+      window.location.href = '/';
     } catch (error) {
       console.error('Sign up error:', error);
       alert(error.message || 'Failed to sign up. Please try again.');
