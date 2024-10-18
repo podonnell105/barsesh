@@ -457,6 +457,7 @@ async function compressVideo(file) {
     const reader = new FileReader();
     reader.onload = function(e) {
       const video = document.createElement('video');
+      video.muted = true; // Mute the video during compression
       video.src = e.target.result;
       video.onloadedmetadata = function() {
         const canvas = document.createElement('canvas');
@@ -484,6 +485,7 @@ async function compressVideo(file) {
         };
 
         mediaRecorder.start();
+        video.playbackRate = 3; // Speed up the video during compression
         video.play();
         const processFrame = () => {
           if (video.paused || video.ended) return;
