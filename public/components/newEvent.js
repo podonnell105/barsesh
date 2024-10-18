@@ -294,13 +294,101 @@ async function populateBarOptions() {
     }
 }
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB in bytes
+import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
 
-function validateFileSize(file) {
-  if (file.size > MAX_FILE_SIZE) {
-    throw new Error(`File size exceeds the limit of ${MAX_FILE_SIZE / 1024 / 1024} MB`);
+const ffmpeg = createFFmpeg({ log: true });
+const MAX_FILE_SIZE = 3.2 * 1024 * 1024; // 3.2 MB in bytes
+
+async function compressVideo(file) {
+  if (!ffmpeg.isLoaded()) {
+    await ffmpeg.load();
+  }
+
+  const inputName = 'input.mp4';
+  const outputName = 'output.mp4';
+
+  ffmpeg.FS('writeFile', inputName, await fetchFile(file));
+
+  // Compress video
+  await ffmpeg.run(
+    '-i', inputName,
+    '-c:v', 'libx264',
+    '-crf', '23',
+    '-preset', 'medium',
+    '-c:a', 'aac',
+    '-b:a', '128k',
+    outputName
+  );
+
+  const data = ffmpeg.FS('readFile', outputName);
+  return new Blob([data.buffer], { type: 'video/mp4' });
+}
+
+async function handleMediaUpload(event) {
+  const file = event.target.files[0];
+  let uploadFile = file;
+
+  if (file.type.startsWith('video/')) {
+    if (file.size > MAX_FILE_SIZE) {
+      console.log('Video exceeds 3.2 MB, compressing...');
+      uploadFile = await compressVideo(file);
+      
+      // Check if compression brought it under 3.2 MB
+      if (uploadFile.size > MAX_FILE_SIZE) {
+        console.log('Video still exceeds 3.2 MB after compression. Further reducing quality...');
+        await ffmpeg.load();
+        const inputName = 'input.mp4';
+        const outputName = 'output.mp4';
+        ffmpeg.FS('writeFile', inputName, await fetchFile(uploadFile));
+        
+        // More aggressive compression
+        await ffmpeg.run(
+          '-i', inputName,
+          '-c:v', 'libx264',
+          '-crf', '28',
+          '-preset', 'faster',
+          '-c:a', 'aac',
+          '-b:a', '96k',
+          '-maxrate', '1M',
+          '-bufsize', '2M',
+          outputName
+        );
+        
+        const data = ffmpeg.FS('readFile', outputName);
+        uploadFile = new Blob([data.buffer], { type: 'video/mp4' });
+      }
+    } else {
+      console.log('Video is already under 3.2 MB, uploading directly...');
+    }
+  }
+
+  const formData = new FormData();
+  formData.append('file', uploadFile, uploadFile.name || 'video.mp4');
+
+  try {
+    const mediaResponse = await fetch('/api/uploadMedia', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Content-Length': uploadFile.size.toString()
+      }
+    });
+
+    if (mediaResponse.ok) {
+      const { path, url } = await mediaResponse.json();
+      console.log('Upload successful:', url);
+      // Handle successful upload (e.g., update UI, save URL to form data)
+    } else {
+      throw new Error('Upload failed');
+    }
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    // Handle upload error (e.g., show error message to user)
   }
 }
+
+// Add event listener to your file input
+document.getElementById('mediaInput').addEventListener('change', handleMediaUpload);
 
 async function handleEventSubmit(event) {
     event.preventDefault();
@@ -461,4 +549,5 @@ function hideEventForm() {
 
 // Initialize bar options on page load
 document.addEventListener('DOMContentLoaded', populateBarOptions);
+
 
