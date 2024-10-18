@@ -158,17 +158,21 @@ function deleteEvent(eventId) {
         fetch(`/api/events/${eventId}`, {
             method: 'DELETE',
             credentials: 'include'
-             // Include cookies for authentication
         })
-        
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw err; });
+            }
+            return response.json();
+        })
         .then(data => {
-            alert('Event deleted successfully');
-            
+            console.log(data.message);
+            alert('Event and associated media deleted successfully');
             window.location.reload();
         })
         .catch(error => {
             console.error('Error deleting event:', error);
-            alert(error.message || 'Failed to delete event. Please try again.');
+            alert(error.error || 'Failed to delete event. Please try again.');
         });
     }
 }

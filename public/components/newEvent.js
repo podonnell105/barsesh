@@ -328,7 +328,6 @@ async function handleEventSubmit(event) {
     }
 
     console.log('Sending event data:', eventData);
-
     try {
         const mediaFile = formData.get('image');
         if (mediaFile && mediaFile.size > 0) {
