@@ -12,6 +12,7 @@ const os = require('os');
 const fs = require('fs');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
+const { createFFmpeg } = require('@ffmpeg/ffmpeg');
 
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
@@ -197,81 +198,61 @@ app.get('/api/event-image/:id', async (req, res) => {
 
 // API endpoint to upload media (image or video) to Firebase Storage
 app.post('/api/uploadMedia', async (req, res) => {
-  const bb = busboy({ 
-    headers: req.headers,
-    limits: {
-      fileSize: 50 * 1024 * 1024 // 50MB limit for initial upload
-    }
-  });
-  let fileName;
+  const bb = busboy({ headers: req.headers });
+  let buffer = Buffer.alloc(0);
   let mimeType;
-  let tempFilePath;
-  let finalFilePath;
+  let fileName;
 
   bb.on('file', (name, file, info) => {
-    const { filename, encoding, mimeType: fileMimeType } = info;
+    const { filename, mimeType: fileMimeType } = info;
     mimeType = fileMimeType;
     fileName = `${Date.now()}-${filename}`;
-    tempFilePath = path.join(os.tmpdir(), fileName);
-    file.pipe(fs.createWriteStream(tempFilePath));
+    file.on('data', (data) => {
+      buffer = Buffer.concat([buffer, data]);
+    });
   });
 
   bb.on('finish', async () => {
     try {
       const folderName = mimeType.startsWith('video/') ? 'event-videos' : 'event-images';
-      finalFilePath = tempFilePath;
-
+      
       if (mimeType.startsWith('video/')) {
-        const compressedFilePath = path.join(os.tmpdir(), `compressed-${fileName}`);
-        await compressVideo(tempFilePath, compressedFilePath);
-        await fs.promises.unlink(tempFilePath);
-        finalFilePath = compressedFilePath;
+        buffer = await compressVideo(buffer);
       }
 
       const file = bucket.file(`${folderName}/${fileName}`);
-      
-      await bucket.upload(finalFilePath, {
-        destination: `${folderName}/${fileName}`,
-        metadata: {
-          contentType: mimeType,
-        },
+      await file.save(buffer, {
+        metadata: { contentType: mimeType },
       });
 
       const [url] = await file.getSignedUrl({ action: 'read', expires: '03-01-2500' });
       res.status(200).json({ path: `${folderName}/${fileName}`, url: url });
     } catch (error) {
       console.error('Detailed error:', error);
-      console.error('Error stack:', error.stack);
       res.status(500).json({ error: 'Error in upload process', details: error.message });
-    } finally {
-      if (finalFilePath) {
-        await fs.promises.unlink(finalFilePath).catch(console.error);
-      }
     }
   });
 
   req.pipe(bb);
 });
 
-async function compressVideo(inputPath, outputPath) {
-  return new Promise((resolve, reject) => {
-    ffmpeg(inputPath)
-      .outputOptions([
-        '-c:v libx264',
-        '-crf 23',
-        '-preset faster',
-        '-c:a aac',
-        '-b:a 128k',
-        '-movflags +faststart',
-        '-vf scale=-2:720', // Scale to 720p
-        '-maxrate 4M',
-        '-bufsize 8M'
-      ])
-      .output(outputPath)
-      .on('end', resolve)
-      .on('error', reject)
-      .run();
-  });
+async function compressVideo(inputBuffer) {
+  await ffmpeg.FS('writeFile', 'input.mp4', inputBuffer);
+  await ffmpeg.run(
+    '-i', 'input.mp4',
+    '-c:v', 'libx264',
+    '-crf', '23',
+    '-preset', 'faster',
+    '-c:a', 'aac',
+    '-b:a', '128k',
+    '-movflags', '+faststart',
+    '-vf', 'scale=-2:720',
+    '-maxrate', '4M',
+    '-bufsize', '8M',
+    'output.mp4'
+  );
+  const data = await ffmpeg.FS('readFile', 'output.mp4');
+  return Buffer.from(data.buffer);
 }
 
 // API endpoint to add a new event
