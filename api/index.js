@@ -196,39 +196,32 @@ app.post('/api/uploadMedia', async (req, res) => {
   const bb = busboy({ headers: req.headers });
   let fileName;
   let mimeType;
-  let tempFilePath;
 
   bb.on('file', (name, file, info) => {
     const { filename, encoding, mimeType: fileMimeType } = info;
     mimeType = fileMimeType;
     fileName = `${Date.now()}-${filename}`;
-    tempFilePath = path.join(os.tmpdir(), fileName);
-    file.pipe(fs.createWriteStream(tempFilePath));
-  });
+    
+    const folderName = mimeType.startsWith('video/') ? 'event-videos' : 'event-images';
+    const fileRef = bucket.file(`${folderName}/${fileName}`);
+    
+    const stream = fileRef.createWriteStream({
+      metadata: {
+        contentType: mimeType,
+      },
+    });
 
-  bb.on('finish', async () => {
-    try {
-      const folderName = mimeType.startsWith('video/') ? 'event-videos' : 'event-images';
-      const file = bucket.file(`${folderName}/${fileName}`);
-      
-      await bucket.upload(tempFilePath, {
-        destination: `${folderName}/${fileName}`,
-        metadata: {
-          contentType: mimeType,
-        },
-      });
+    file.pipe(stream);
 
-      const [url] = await file.getSignedUrl({ action: 'read', expires: '03-01-2500' });
+    stream.on('error', (err) => {
+      console.error('Upload stream error:', err);
+      res.status(500).json({ error: 'Upload failed' });
+    });
+
+    stream.on('finish', async () => {
+      const [url] = await fileRef.getSignedUrl({ action: 'read', expires: '03-01-2500' });
       res.status(200).json({ path: `${folderName}/${fileName}`, url: url });
-    } catch (error) {
-      console.error('Detailed error:', error);
-      console.error('Error stack:', error.stack);
-      res.status(500).json({ error: 'Error in upload process', details: error.message });
-    } finally {
-      fs.unlink(tempFilePath, (err) => {
-        if (err) console.error('Error deleting temp file:', err);
-      });
-    }
+    });
   });
 
   req.pipe(bb);
