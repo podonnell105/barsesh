@@ -13,6 +13,8 @@ const fs = require('fs');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
 
+ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
@@ -204,6 +206,7 @@ app.post('/api/uploadMedia', async (req, res) => {
   let fileName;
   let mimeType;
   let tempFilePath;
+  let finalFilePath;
 
   bb.on('file', (name, file, info) => {
     const { filename, encoding, mimeType: fileMimeType } = info;
@@ -216,12 +219,12 @@ app.post('/api/uploadMedia', async (req, res) => {
   bb.on('finish', async () => {
     try {
       const folderName = mimeType.startsWith('video/') ? 'event-videos' : 'event-images';
-      let finalFilePath = tempFilePath;
+      finalFilePath = tempFilePath;
 
       if (mimeType.startsWith('video/')) {
         const compressedFilePath = path.join(os.tmpdir(), `compressed-${fileName}`);
         await compressVideo(tempFilePath, compressedFilePath);
-        await fs.unlink(tempFilePath); // Delete the original file
+        await fs.promises.unlink(tempFilePath);
         finalFilePath = compressedFilePath;
       }
 
@@ -241,8 +244,9 @@ app.post('/api/uploadMedia', async (req, res) => {
       console.error('Error stack:', error.stack);
       res.status(500).json({ error: 'Error in upload process', details: error.message });
     } finally {
-      // Clean up the temp files
-      await fs.unlink(finalFilePath).catch(console.error);
+      if (finalFilePath) {
+        await fs.promises.unlink(finalFilePath).catch(console.error);
+      }
     }
   });
 
