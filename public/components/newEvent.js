@@ -294,9 +294,30 @@ async function populateBarOptions() {
     }
 }
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB in bytes
+
+function validateFileSize(file) {
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error(`File size exceeds the limit of ${MAX_FILE_SIZE / 1024 / 1024} MB`);
+  }
+}
+
 async function handleEventSubmit(event) {
     event.preventDefault();
+    
     const form = event.target;
+    const fileInput = form.querySelector('input[type="file"]');
+    
+    if (fileInput && fileInput.files.length > 0) {
+        try {
+            validateFileSize(fileInput.files[0]);
+        } catch (error) {
+            console.error('File size validation failed:', error.message);
+            alert(error.message);
+            return;
+        }
+    }
+    
     const formData = new FormData(form);
     
     const eventData = {
@@ -311,7 +332,6 @@ async function handleEventSubmit(event) {
 
     console.log('Event data before submission:', eventData);
 
-    // Include userId in the event data
     eventData.organiserid = eventData.user_id;
 
     if (!eventData.title || !eventData.date || !eventData.starttime || !eventData.endtime || !eventData.barid || !eventData.organiserid) {
@@ -332,32 +352,25 @@ async function handleEventSubmit(event) {
         const mediaFile = formData.get('image');
         if (mediaFile && mediaFile.size > 0) {
             const mediaFormData = new FormData();
-            let fileToUpload = mediaFile;
+            mediaFormData.append('file', mediaFile);
 
-            if (mediaFile.type.startsWith('video/')) {
-                try {
-                    fileToUpload = await compressVideo(mediaFile);
-                    console.log('Video compressed successfully');
-                } catch (error) {
-                    console.error('Error compressing video:', error);
-                    alert('Failed to compress video. Uploading original file.');
-                }
-            }
-
-            mediaFormData.append('file', fileToUpload);
+            // Show upload progress to user
+            const uploadStatus = document.createElement('p');
+            uploadStatus.textContent = 'Uploading media... This may take a while for large files.';
+            form.appendChild(uploadStatus);
 
             const mediaResponse = await fetch('/api/uploadMedia', {
                 method: 'POST',
                 body: mediaFormData,
-                timeout: 60000 // 60 seconds
             });
 
             if (!mediaResponse.ok) {
-                throw new Error('Failed to upload media');
+                throw new Error(`Failed to upload media: ${mediaResponse.statusText}`);
             }
 
             const mediaResult = await mediaResponse.json();
             eventData.media_url = mediaResult.url;
+            uploadStatus.textContent = 'Media uploaded successfully!';
         }
 
         const response = await fetch('/api/addEvent', {
@@ -384,7 +397,7 @@ async function handleEventSubmit(event) {
         hideEventForm();
     } catch (error) {
         console.error('Error adding event:', error);
-        alert('Failed to add event. Please try again.');
+        alert(`Failed to add event: ${error.message}`);
     }
 }
 
@@ -451,49 +464,3 @@ function hideEventForm() {
 
 // Initialize bar options on page load
 document.addEventListener('DOMContentLoaded', populateBarOptions);
-
-async function compressVideo(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const video = document.createElement('video');
-      video.src = e.target.result;
-      video.onloadedmetadata = function() {
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth / 2;
-        canvas.height = video.videoHeight / 2;
-        const ctx = canvas.getContext('2d');
-        const stream = canvas.captureStream();
-        const mediaRecorder = new MediaRecorder(stream, {
-          mimeType: 'video/webm',
-          videoBitsPerSecond: 1000000 // Adjust this value for desired quality
-        });
-        const chunks = [];
-
-        mediaRecorder.ondataavailable = function(e) {
-          chunks.push(e.data);
-        };
-
-        mediaRecorder.onstop = function() {
-          const blob = new Blob(chunks, { type: 'video/webm' });
-          resolve(new File([blob], file.name, { type: 'video/webm' }));
-        };
-
-        video.onended = function() {
-          mediaRecorder.stop();
-        };
-
-        mediaRecorder.start();
-        video.play();
-        const processFrame = () => {
-          if (video.paused || video.ended) return;
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          requestAnimationFrame(processFrame);
-        };
-        processFrame();
-      };
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}

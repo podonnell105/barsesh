@@ -83,6 +83,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <p>Time: ${convertTo24HourTime(event.starttime)} - ${convertTo24HourTime(event.endtime)}</p>
                     <button class="delete-event-btn" data-event-id="${event.id}">Delete</button>
                 `;
+                if (event.media_url) {
+                    const viewMediaBtn = document.createElement('button');
+                    viewMediaBtn.textContent = 'View Media';
+                    viewMediaBtn.addEventListener('click', () => displayEventMedia(event.media_url));
+                    eventTile.appendChild(viewMediaBtn);
+                }
                 userEventsList.appendChild(eventTile);
             });
 
@@ -188,4 +194,21 @@ function convertTo24HourTime(timeString) {
     }
 
     return `${hours}:${minutes}`;
+}
+
+function displayEventMedia(mediaUrl) {
+    const mediaContainer = document.getElementById('event-media');
+    mediaContainer.innerHTML = '';
+
+    if (mediaUrl.includes('event-videos')) {
+        const video = document.createElement('video');
+        video.src = mediaUrl;
+        video.controls = true;
+        video.muted = false; // Ensure sound is on
+        mediaContainer.appendChild(video);
+    } else if (mediaUrl.includes('event-images')) {
+        const img = document.createElement('img');
+        img.src = mediaUrl;
+        mediaContainer.appendChild(img);
+    }
 }

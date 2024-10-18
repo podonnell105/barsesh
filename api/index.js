@@ -193,12 +193,7 @@ app.get('/api/event-image/:id', async (req, res) => {
 
 // API endpoint to upload media (image or video) to Firebase Storage
 app.post('/api/uploadMedia', async (req, res) => {
-  const bb = busboy({ 
-    headers: req.headers,
-    limits: {
-      fileSize: 100 * 1024 * 1024 // 100MB limit
-    }
-  });
+  const bb = busboy({ headers: req.headers });
   let fileName;
   let mimeType;
   let tempFilePath;
@@ -230,7 +225,6 @@ app.post('/api/uploadMedia', async (req, res) => {
       console.error('Error stack:', error.stack);
       res.status(500).json({ error: 'Error in upload process', details: error.message });
     } finally {
-      // Clean up the temp file
       fs.unlink(tempFilePath, (err) => {
         if (err) console.error('Error deleting temp file:', err);
       });
@@ -531,6 +525,12 @@ app.get('/api/bar-image/:id', async (req, res) => {
     console.error('Error fetching bar image:', error);
     res.status(500).json({ error: 'Failed to fetch bar image' });
   }
+});
+
+app.use('/api/uploadMedia', (req, res, next) => {
+  req.setTimeout(300000); // 5 minutes
+  res.setTimeout(300000); // 5 minutes
+  next();
 });
 
 module.exports = app;
