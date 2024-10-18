@@ -196,7 +196,7 @@ app.post('/api/uploadMedia', async (req, res) => {
   const bb = busboy({ 
     headers: req.headers,
     limits: {
-      fileSize: 100 * 1024 * 1024 // 100MB limit
+      fileSize: 10 * 1024 * 1024 // 10MB limit
     }
   });
   let fileName;
