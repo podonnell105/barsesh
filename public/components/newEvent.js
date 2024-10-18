@@ -354,18 +354,23 @@ async function handleEventSubmit(event) {
             const mediaFormData = new FormData();
             mediaFormData.append('file', mediaFile);
 
+            // Show upload progress to user
+            const uploadStatus = document.createElement('p');
+            uploadStatus.textContent = 'Uploading media...';
+            form.appendChild(uploadStatus);
+
             const mediaResponse = await fetch('/api/uploadMedia', {
                 method: 'POST',
                 body: mediaFormData,
-                timeout: 60000 // 60 seconds
             });
 
             if (!mediaResponse.ok) {
-                throw new Error('Failed to upload media');
+                throw new Error(`Failed to upload media: ${mediaResponse.statusText}`);
             }
 
             const mediaResult = await mediaResponse.json();
             eventData.media_url = mediaResult.url;
+            uploadStatus.textContent = 'Media uploaded successfully!';
         }
 
         const response = await fetch('/api/addEvent', {
@@ -392,7 +397,7 @@ async function handleEventSubmit(event) {
         hideEventForm();
     } catch (error) {
         console.error('Error adding event:', error);
-        alert('Failed to add event. Please try again.');
+        alert(`Failed to add event: ${error.message}`);
     }
 }
 
@@ -459,3 +464,6 @@ function hideEventForm() {
 
 // Initialize bar options on page load
 document.addEventListener('DOMContentLoaded', populateBarOptions);
+
+
+
