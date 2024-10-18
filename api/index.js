@@ -10,6 +10,8 @@ const admin = require("firebase-admin");
 const cors = require('cors');
 const os = require('os');
 const fs = require('fs');
+const ffmpeg = require('fluent-ffmpeg');
+const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
 
 const app = express();
 app.use(express.json());
@@ -196,7 +198,7 @@ app.post('/api/uploadMedia', async (req, res) => {
   const bb = busboy({ 
     headers: req.headers,
     limits: {
-      fileSize: 10 * 1024 * 1024 // 10MB limit
+      fileSize: 50 * 1024 * 1024 // 50MB limit for initial upload
     }
   });
   let fileName;
@@ -214,9 +216,18 @@ app.post('/api/uploadMedia', async (req, res) => {
   bb.on('finish', async () => {
     try {
       const folderName = mimeType.startsWith('video/') ? 'event-videos' : 'event-images';
+      let finalFilePath = tempFilePath;
+
+      if (mimeType.startsWith('video/')) {
+        const compressedFilePath = path.join(os.tmpdir(), `compressed-${fileName}`);
+        await compressVideo(tempFilePath, compressedFilePath);
+        await fs.unlink(tempFilePath); // Delete the original file
+        finalFilePath = compressedFilePath;
+      }
+
       const file = bucket.file(`${folderName}/${fileName}`);
       
-      await bucket.upload(tempFilePath, {
+      await bucket.upload(finalFilePath, {
         destination: `${folderName}/${fileName}`,
         metadata: {
           contentType: mimeType,
@@ -230,15 +241,34 @@ app.post('/api/uploadMedia', async (req, res) => {
       console.error('Error stack:', error.stack);
       res.status(500).json({ error: 'Error in upload process', details: error.message });
     } finally {
-      // Clean up the temp file
-      fs.unlink(tempFilePath, (err) => {
-        if (err) console.error('Error deleting temp file:', err);
-      });
+      // Clean up the temp files
+      await fs.unlink(finalFilePath).catch(console.error);
     }
   });
 
   req.pipe(bb);
 });
+
+async function compressVideo(inputPath, outputPath) {
+  return new Promise((resolve, reject) => {
+    ffmpeg(inputPath)
+      .outputOptions([
+        '-c:v libx264',
+        '-crf 23',
+        '-preset faster',
+        '-c:a aac',
+        '-b:a 128k',
+        '-movflags +faststart',
+        '-vf scale=-2:720', // Scale to 720p
+        '-maxrate 4M',
+        '-bufsize 8M'
+      ])
+      .output(outputPath)
+      .on('end', resolve)
+      .on('error', reject)
+      .run();
+  });
+}
 
 // API endpoint to add a new event
 app.post('/api/addEvent', async (req, res) => {
