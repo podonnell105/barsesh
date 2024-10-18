@@ -356,7 +356,7 @@ async function handleEventSubmit(event) {
 
             // Show upload progress to user
             const uploadStatus = document.createElement('p');
-            uploadStatus.textContent = 'Uploading media...';
+            uploadStatus.textContent = 'Uploading media... This may take a while for large files.';
             form.appendChild(uploadStatus);
 
             const mediaResponse = await fetch('/api/uploadMedia', {
@@ -464,6 +464,8 @@ function hideEventForm() {
 
 // Initialize bar options on page load
 document.addEventListener('DOMContentLoaded', populateBarOptions);
+
+
 
 
 

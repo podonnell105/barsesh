@@ -10,11 +10,6 @@ const admin = require("firebase-admin");
 const cors = require('cors');
 const os = require('os');
 const fs = require('fs');
-const ffmpeg = require('fluent-ffmpeg');
-const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
-const { createFFmpeg } = require('@ffmpeg/ffmpeg');
-
-ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 const app = express();
 app.use(express.json());
@@ -199,61 +194,45 @@ app.get('/api/event-image/:id', async (req, res) => {
 // API endpoint to upload media (image or video) to Firebase Storage
 app.post('/api/uploadMedia', async (req, res) => {
   const bb = busboy({ headers: req.headers });
-  let buffer = Buffer.alloc(0);
-  let mimeType;
   let fileName;
+  let mimeType;
+  let tempFilePath;
 
   bb.on('file', (name, file, info) => {
-    const { filename, mimeType: fileMimeType } = info;
+    const { filename, encoding, mimeType: fileMimeType } = info;
     mimeType = fileMimeType;
     fileName = `${Date.now()}-${filename}`;
-    file.on('data', (data) => {
-      buffer = Buffer.concat([buffer, data]);
-    });
+    tempFilePath = path.join(os.tmpdir(), fileName);
+    file.pipe(fs.createWriteStream(tempFilePath));
   });
 
   bb.on('finish', async () => {
     try {
       const folderName = mimeType.startsWith('video/') ? 'event-videos' : 'event-images';
-      
-      if (mimeType.startsWith('video/')) {
-        buffer = await compressVideo(buffer);
-      }
-
       const file = bucket.file(`${folderName}/${fileName}`);
-      await file.save(buffer, {
-        metadata: { contentType: mimeType },
+      
+      await bucket.upload(tempFilePath, {
+        destination: `${folderName}/${fileName}`,
+        metadata: {
+          contentType: mimeType,
+        },
       });
 
       const [url] = await file.getSignedUrl({ action: 'read', expires: '03-01-2500' });
       res.status(200).json({ path: `${folderName}/${fileName}`, url: url });
     } catch (error) {
       console.error('Detailed error:', error);
+      console.error('Error stack:', error.stack);
       res.status(500).json({ error: 'Error in upload process', details: error.message });
+    } finally {
+      fs.unlink(tempFilePath, (err) => {
+        if (err) console.error('Error deleting temp file:', err);
+      });
     }
   });
 
   req.pipe(bb);
 });
-
-async function compressVideo(inputBuffer) {
-  await ffmpeg.FS('writeFile', 'input.mp4', inputBuffer);
-  await ffmpeg.run(
-    '-i', 'input.mp4',
-    '-c:v', 'libx264',
-    '-crf', '23',
-    '-preset', 'faster',
-    '-c:a', 'aac',
-    '-b:a', '128k',
-    '-movflags', '+faststart',
-    '-vf', 'scale=-2:720',
-    '-maxrate', '4M',
-    '-bufsize', '8M',
-    'output.mp4'
-  );
-  const data = await ffmpeg.FS('readFile', 'output.mp4');
-  return Buffer.from(data.buffer);
-}
 
 // API endpoint to add a new event
 app.post('/api/addEvent', async (req, res) => {
