@@ -551,3 +551,5 @@ function hideEventForm() {
 document.addEventListener('DOMContentLoaded', populateBarOptions);
 
 
+
+

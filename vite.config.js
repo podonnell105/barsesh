@@ -14,6 +14,13 @@ export default defineConfig({
   },
   publicDir: 'public',
   server: {
-    open: true // This will open the browser automatically
-  }
+    open: true, // This will open the browser automatically
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    },
+  },
+  optimizeDeps: {
+    exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/core'],
+  },
 });
