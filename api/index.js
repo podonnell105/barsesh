@@ -193,7 +193,12 @@ app.get('/api/event-image/:id', async (req, res) => {
 
 // API endpoint to upload media (image or video) to Firebase Storage
 app.post('/api/uploadMedia', async (req, res) => {
-  const bb = busboy({ headers: req.headers });
+  const bb = busboy({ 
+    headers: req.headers,
+    limits: {
+      fileSize: 100 * 1024 * 1024 // 100MB limit
+    }
+  });
   let fileName;
   let mimeType;
   let tempFilePath;

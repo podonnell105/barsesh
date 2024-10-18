@@ -332,11 +332,24 @@ async function handleEventSubmit(event) {
         const mediaFile = formData.get('image');
         if (mediaFile && mediaFile.size > 0) {
             const mediaFormData = new FormData();
-            mediaFormData.append('file', mediaFile);
+            let fileToUpload = mediaFile;
+
+            if (mediaFile.type.startsWith('video/')) {
+                try {
+                    fileToUpload = await compressVideo(mediaFile);
+                    console.log('Video compressed successfully');
+                } catch (error) {
+                    console.error('Error compressing video:', error);
+                    alert('Failed to compress video. Uploading original file.');
+                }
+            }
+
+            mediaFormData.append('file', fileToUpload);
 
             const mediaResponse = await fetch('/api/uploadMedia', {
                 method: 'POST',
                 body: mediaFormData,
+                timeout: 60000 // 60 seconds
             });
 
             if (!mediaResponse.ok) {
@@ -438,3 +451,49 @@ function hideEventForm() {
 
 // Initialize bar options on page load
 document.addEventListener('DOMContentLoaded', populateBarOptions);
+
+async function compressVideo(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const video = document.createElement('video');
+      video.src = e.target.result;
+      video.onloadedmetadata = function() {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth / 2;
+        canvas.height = video.videoHeight / 2;
+        const ctx = canvas.getContext('2d');
+        const stream = canvas.captureStream();
+        const mediaRecorder = new MediaRecorder(stream, {
+          mimeType: 'video/webm',
+          videoBitsPerSecond: 1000000 // Adjust this value for desired quality
+        });
+        const chunks = [];
+
+        mediaRecorder.ondataavailable = function(e) {
+          chunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = function() {
+          const blob = new Blob(chunks, { type: 'video/webm' });
+          resolve(new File([blob], file.name, { type: 'video/webm' }));
+        };
+
+        video.onended = function() {
+          mediaRecorder.stop();
+        };
+
+        mediaRecorder.start();
+        video.play();
+        const processFrame = () => {
+          if (video.paused || video.ended) return;
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          requestAnimationFrame(processFrame);
+        };
+        processFrame();
+      };
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
