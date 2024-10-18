@@ -6,19 +6,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     const userId = window.location.pathname.split('/').pop();
     
     try {
-        const response = await fetch(`/api/manageEvents/${userId}`, {
+        const response = await fetch(`/manageEvents/${userId}`, {
             method: 'GET',
             credentials: 'include'
         });
 
         if (!response.ok) {
-            const data = await response.json();
-            if (data.error === 'Authentication required' || data.error === 'Invalid token') {
-                // Redirect to signin page with the current URL as a parameter
+            if (response.status === 403) {
                 window.location.href = `/signin?redirect=${encodeURIComponent(window.location.pathname)}`;
                 return;
             }
-            throw new Error(data.error || 'Authentication failed');
+            throw new Error('Authentication failed');
         }
 
         // If we reach here, the user is authenticated

@@ -70,28 +70,25 @@ exports.mapboxAccessToken = mapboxAccessToken;
 // Middleware to authenticate user
 function authenticateUser(req, res, next) {
   const token = req.cookies.token;
+  console.log('Received token:', token);
 
   if (!token) {
+    console.log('No token found. Redirecting to sign-in.');
     return res.status(401).json({ error: 'Authentication required', redirectTo: '/signin' });
   }
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
+    console.log('Token verified. User:', req.user);
     next();
   } catch (error) {
+    console.log('Token verification failed:', error.message);
     return res.status(401).json({ error: 'Invalid token', redirectTo: '/signin' });
   }
 }
 
-// API endpoint to fetch user-specific events
-app.get('/api/manageEvents/:id', authenticateUser, async (req, res) => {
-  // Check if the authenticated user's ID matches the requested ID
-  if (req.user.id !== parseInt(req.params.id, 10)) {
-    return res.status(403).json({ error: 'Unauthorized access' });
-  }
-  res.sendFile(path.join(__dirname, '../dist/manageEvents.html'));
-});
+
 
 // API endpoint to fetch all events
 app.get('/api/events', async (req, res) => {
@@ -301,10 +298,10 @@ app.post('/api/signin', async (req, res) => {
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
-      domain: process.env.NODE_ENV === 'production' ? '.barsesh.com' : undefined,
-      maxAge: 3600000
+      secure: process.env.NODE_ENV === 'production', // Ensure secure in production
+      sameSite: 'Lax', // Start with 'Lax' and adjust if necessary
+      // domain: process.env.NODE_ENV === 'production' ? '.barsesh.com' : undefined, // Remove or verify
+      maxAge: 3600000 // 1 hour
     });
 
     res.json({
