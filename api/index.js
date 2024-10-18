@@ -8,6 +8,8 @@ const cookieParser = require('cookie-parser');
 const bcrypt = require('bcrypt');
 const admin = require("firebase-admin");
 const cors = require('cors');
+const os = require('os');
+const fs = require('fs');
 
 const app = express();
 app.use(express.json());
@@ -94,15 +96,19 @@ app.get('/api/manageEvents/:id', authenticateUser, async (req, res) => {
 // API endpoint to fetch all events
 app.get('/api/events', async (req, res) => {
   try {
-    const { data, error } = await supabase.from('events').select('*');
-    if (error) {
-      console.error('Supabase error fetching events:', error);
-      throw error;
-    }
+    const { data, error } = await supabase
+      .from('events')
+      .select('*')
+      .order('date', { ascending: true });
+
+    if (error) throw error;
+
+    console.log('Fetched events:', data); // Add this line for debugging
+
     res.json(data);
   } catch (error) {
     console.error('Error fetching events:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Failed to fetch events' });
   }
 });
 
@@ -188,57 +194,44 @@ app.get('/api/event-image/:id', async (req, res) => {
   }
 });
 
-// API endpoint to upload an image to Firebase Storage
-app.post('/api/uploadImage', async (req, res) => {
+// API endpoint to upload media (image or video) to Firebase Storage
+app.post('/api/uploadMedia', async (req, res) => {
   const bb = busboy({ headers: req.headers });
-  let fileBuffer;
   let fileName;
+  let mimeType;
+  let tempFilePath;
 
   bb.on('file', (name, file, info) => {
-    const { filename, encoding, mimeType } = info;
+    const { filename, encoding, mimeType: fileMimeType } = info;
+    mimeType = fileMimeType;
     fileName = `${Date.now()}-${filename}`;
-    const chunks = [];
-    file.on('data', (data) => {
-      chunks.push(data);
-    });
-    file.on('end', () => {
-      fileBuffer = Buffer.concat(chunks);
-    });
+    tempFilePath = path.join(os.tmpdir(), fileName);
+    file.pipe(fs.createWriteStream(tempFilePath));
   });
 
   bb.on('finish', async () => {
-    if (!fileBuffer) {
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
-
     try {
-      const file = bucket.file(`event-images/${fileName}`);
-      const stream = file.createWriteStream({
+      const folderName = mimeType.startsWith('video/') ? 'event-videos' : 'event-images';
+      const file = bucket.file(`${folderName}/${fileName}`);
+      
+      await bucket.upload(tempFilePath, {
+        destination: `${folderName}/${fileName}`,
         metadata: {
-          contentType: 'image/jpeg', // Adjust this based on the actual file type
+          contentType: mimeType,
         },
-        resumable: false
       });
 
-      stream.on('error', (err) => {
-        console.error('Error uploading to Firebase Storage:', err);
-        res.status(500).json({ error: 'Upload to Firebase Storage failed', details: err.message });
-      });
-
-      stream.on('finish', async () => {
-        try {
-          const [url] = await file.getSignedUrl({ action: 'read', expires: '03-01-2500' });
-          res.status(200).json({ path: `event-images/${fileName}`, url: url });
-        } catch (error) {
-          console.error('Error getting signed URL:', error);
-          res.status(500).json({ error: 'Failed to get signed URL', details: error.message });
-        }
-      });
-
-      stream.end(fileBuffer);
+      const [url] = await file.getSignedUrl({ action: 'read', expires: '03-01-2500' });
+      res.status(200).json({ path: `${folderName}/${fileName}`, url: url });
     } catch (error) {
-      console.error('Error in upload process:', error);
+      console.error('Detailed error:', error);
+      console.error('Error stack:', error.stack);
       res.status(500).json({ error: 'Error in upload process', details: error.message });
+    } finally {
+      // Clean up the temp file
+      fs.unlink(tempFilePath, (err) => {
+        if (err) console.error('Error deleting temp file:', err);
+      });
     }
   });
 
@@ -247,9 +240,9 @@ app.post('/api/uploadImage', async (req, res) => {
 
 // API endpoint to add a new event
 app.post('/api/addEvent', async (req, res) => {
-  const { title, startdate, enddate, starttime, endtime, description, barid, media_url, user_id } = req.body;
+  const { title, date, starttime, endtime, description, barid, media_url, user_id } = req.body;
 
-  if (!title || !startdate || !starttime || !endtime || !barid || !user_id) {
+  if (!title || !date || !starttime || !endtime || !barid || !user_id) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
@@ -258,8 +251,7 @@ app.post('/api/addEvent', async (req, res) => {
       .from('events')
       .insert([{
         title,
-        startdate,
-        enddate,
+        date,
         starttime,
         endtime,
         description: description || null,

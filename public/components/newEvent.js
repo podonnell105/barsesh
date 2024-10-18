@@ -242,8 +242,8 @@ export function showEventForm() {
             </select>
             <button type="button" id="add-location-btn">Add Location</button>
         
-            <label for="image">Upload Image:</label>
-            <input type="file" id="image" name="image" accept="image/*">
+            <label for="image">Upload Media (Image/Video):</label>
+            <input type="file" id="image" name="image" accept="image/*,video/mp4">
 
             <button type="submit">Add Event</button>
             <button type="button" id="cancel-event">Cancel</button>
@@ -301,8 +301,7 @@ async function handleEventSubmit(event) {
     
     const eventData = {
         title: formData.get('title'),
-        startdate: formData.get('event-date'),
-        enddate: formData.get('event-date'),
+        date: formData.get('event-date'),
         starttime: formData.get('event-start-time'),
         endtime: formData.get('event-end-time'),
         description: formData.get('description'),
@@ -315,10 +314,10 @@ async function handleEventSubmit(event) {
     // Include userId in the event data
     eventData.organiserid = eventData.user_id;
 
-    if (!eventData.title || !eventData.startdate || !eventData.starttime || !eventData.endtime || !eventData.barid || !eventData.organiserid) {
+    if (!eventData.title || !eventData.date || !eventData.starttime || !eventData.endtime || !eventData.barid || !eventData.organiserid) {
         console.log('Missing fields:', {
             title: !eventData.title,
-            startdate: !eventData.startdate,
+            date: !eventData.date,
             starttime: !eventData.starttime,
             endtime: !eventData.endtime,
             barid: !eventData.barid,
@@ -331,22 +330,22 @@ async function handleEventSubmit(event) {
     console.log('Sending event data:', eventData);
 
     try {
-        const imageFile = formData.get('image');
-        if (imageFile && imageFile.size > 0) {
-            const imageFormData = new FormData();
-            imageFormData.append('file', imageFile);
+        const mediaFile = formData.get('image');
+        if (mediaFile && mediaFile.size > 0) {
+            const mediaFormData = new FormData();
+            mediaFormData.append('file', mediaFile);
 
-            const imageResponse = await fetch('/api/uploadImage', {
+            const mediaResponse = await fetch('/api/uploadMedia', {
                 method: 'POST',
-                body: imageFormData,
+                body: mediaFormData,
             });
 
-            if (!imageResponse.ok) {
-                throw new Error('Failed to upload image');
+            if (!mediaResponse.ok) {
+                throw new Error('Failed to upload media');
             }
 
-            const imageResult = await imageResponse.json();
-            eventData.media_url = imageResult.url;
+            const mediaResult = await mediaResponse.json();
+            eventData.media_url = mediaResult.url;
         }
 
         const response = await fetch('/api/addEvent', {
@@ -366,7 +365,6 @@ async function handleEventSubmit(event) {
         console.log('Server response:', result);
 
         if (result && result.length > 0) {
-          
             console.log(`Media URL for event ${result[0].id}: ${result[0].media_url}`);
         }
 

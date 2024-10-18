@@ -120,20 +120,11 @@ async function fetchEvents() {
     try {
         const response = await fetch('/api/events');
         if (!response.ok) {
-            throw new Error('Network response was not ok');
+            throw new Error('Failed to fetch events');
         }
-        const data = await response.json();
-        return data.map(event => ({
-            id: event.id,
-            title: event.title,
-            barID: event.barid,
-            startDate: event.startdate,
-            endDate: event.enddate,
-            startTime: event.starttime,
-            endTime: event.endtime,
-            description: event.description,
-            media_url: event.media_url
-        }));
+        const events = await response.json();
+        console.log('Fetched events:', events); // Add this line for debugging
+        return events;
     } catch (error) {
         console.error('Error fetching events:', error);
         return [];
@@ -155,4 +146,3 @@ function convertTo24HourTime(timeString) {
 
     return `${hours}:${minutes}`;
 }
-

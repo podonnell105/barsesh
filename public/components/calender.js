@@ -1,4 +1,5 @@
 function createCalendar(events) {
+  
     createInteractiveCalendar(events);
 }
 function createInteractiveCalendar(events) {
@@ -58,7 +59,7 @@ function createInteractiveCalendar(events) {
         for (let day = 1; day <= daysInMonth; day++) {
             const currentDate = new Date(Date.UTC(year, month, day));
             const formattedDate = currentDate.toISOString().split('T')[0];
-            const dayEvents = events.filter(event => event.startDate === formattedDate);
+            const dayEvents = events.filter(event => event.date === formattedDate);
             let eventInfosHTML = dayEvents.slice(0, 2).map(event => {
                 const fontSize = getFontSize(event.title);
                 if (window.matchMedia('(max-width: 768px)').matches) {
@@ -71,7 +72,7 @@ function createInteractiveCalendar(events) {
                     return `
                         <div class="event-info" style="font-size: ${fontSize};">
                             ${event.title}<br>
-                            ${event.startTime} - ${event.endTime}
+                            ${formatTime(event.starttime)} - ${formatTime(event.endtime)}
                         </div>
                     `;
                 }
@@ -111,18 +112,18 @@ function createInteractiveCalendar(events) {
         const eventListElement = document.getElementById('event-list');
         eventListElement.innerHTML = '';
         const formattedDate = date.toISOString().split('T')[0];
-        const dayEvents = events.filter(event => event.startDate === formattedDate);
+        const dayEvents = events.filter(event => event.date === formattedDate);
         if (dayEvents.length > 0) {
             dayEvents.forEach(event => {
                 const eventItem = document.createElement('div');
                 eventItem.className = 'event-item';
                 eventItem.innerHTML = `
                     <strong>${event.title}</strong><br>
-                    ${event.startTime} - ${event.endTime}<br>
-                    ${event.description}
+                    ${formatTime(event.starttime)} - ${formatTime(event.endtime)}<br>
+                    ${event.description || ''}
                 `;
                 eventItem.addEventListener('click', () => {
-                    displayBar(event.barID);
+                    displayBar(event.barid);
                     displayEventDetails(event);
                     if (document.getElementById('details-container')) {
                         document.getElementById('details-container').scrollIntoView({ behavior: 'smooth' });
@@ -134,7 +135,7 @@ function createInteractiveCalendar(events) {
             eventListElement.innerHTML = '<p>No events found for this day.</p>';
         }
         if (dayEvents.length > 0) {
-            displayBar(dayEvents[0].barID);
+            displayBar(dayEvents[0].barid);
             displayEventDetails(dayEvents[0]);
         }
     }
@@ -143,19 +144,31 @@ function createInteractiveCalendar(events) {
         const eventDetails = document.getElementById('event-details');
         eventDetails.innerHTML = `
             <h3>${event.title}</h3>
-            <p><strong>Date:</strong> ${event.startDate}</p>
-            <p><strong>Time:</strong> ${event.startTime} - ${event.endTime}</p>
-            <p>${event.description}</p>
+            <p><strong>Date:</strong> ${event.date}</p>
+            <p><strong>Time:</strong> ${formatTime(event.starttime)} - ${formatTime(event.endtime)}</p>
+            <p>${event.description || ''}</p>
         `;
         
-        const eventImageContainer = document.getElementById('event-image');
+        const eventMediaContainer = document.getElementById('event-image');
         console.log('Event media URL:', event.media_url);
         if (event.media_url) {
-            console.log('Attempting to set image');
-            eventImageContainer.innerHTML = `<img src="${event.media_url}" alt="Event Image" onerror="console.error('Image failed to load');">`;
+            console.log('Attempting to set media');
+            if (event.media_url.includes('event-images')) {
+                eventMediaContainer.innerHTML = `<img src="${event.media_url}" alt="Event Image" onerror="console.error('Image failed to load');">`;
+            } else if (event.media_url.includes('event-videos')) {
+                eventMediaContainer.innerHTML = `
+                    <video controls>
+                        <source src="${event.media_url}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                `;
+            } else {
+                console.log('Unrecognized media type');
+                eventMediaContainer.innerHTML = '<p>Media type not supported</p>';
+            }
         } else {
             console.log('No media URL available');
-            eventImageContainer.innerHTML = '<p>No image available</p>';
+            eventMediaContainer.innerHTML = '<p>No media available</p>';
         }
     }
     
@@ -175,4 +188,11 @@ function createInteractiveCalendar(events) {
         renderCalendar(currentMonth, currentYear);
     });
 }
+
+function formatTime(timeString) {
+    if (!timeString) return '';
+    const [hours, minutes] = timeString.split(':');
+    return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+}
+
 export { createCalendar };
