@@ -117,7 +117,6 @@ html, body {
   display: none;
   flex: 1;
   flex-direction: row;
-  
   width: 100%;
  
 }
@@ -164,8 +163,8 @@ html, body {
   display: flex;
   margin-left: 10px;
   flex-direction: column;
-  overflow-y: scroll;
-  height:80vh; /* Matches the height of event-list container */
+  overflow-y: auto;
+  height: 80vh;
 }
 /* Map Container */
 #map-container {
@@ -174,6 +173,17 @@ html, body {
   padding: 1rem;
   margin-bottom: 1rem;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+#map {
+  width: 100%;
+  flex-grow: 1;
+  min-height: 300px;
+  border-radius: 12px;
+  overflow: hidden;
 }
 /* Bar Details Container */
 #bar-details,
@@ -506,3 +516,5 @@ html, body {
         object-fit: contain;
     }
 }
+
+
