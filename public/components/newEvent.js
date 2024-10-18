@@ -294,9 +294,30 @@ async function populateBarOptions() {
     }
 }
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB in bytes
+
+function validateFileSize(file) {
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error(`File size exceeds the limit of ${MAX_FILE_SIZE / 1024 / 1024} MB`);
+  }
+}
+
 async function handleEventSubmit(event) {
     event.preventDefault();
+    
     const form = event.target;
+    const fileInput = form.querySelector('input[type="file"]');
+    
+    if (fileInput && fileInput.files.length > 0) {
+        try {
+            validateFileSize(fileInput.files[0]);
+        } catch (error) {
+            console.error('File size validation failed:', error.message);
+            alert(error.message);
+            return;
+        }
+    }
+    
     const formData = new FormData(form);
     
     const eventData = {
@@ -438,4 +459,3 @@ function hideEventForm() {
 
 // Initialize bar options on page load
 document.addEventListener('DOMContentLoaded', populateBarOptions);
-
