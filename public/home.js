@@ -132,7 +132,7 @@ async function fetchEvents() {
             startTime: event.starttime,
             endTime: event.endtime,
             description: event.description,
-            image_url: event.image_url
+            media_url: event.media_url
         }));
     } catch (error) {
         console.error('Error fetching events:', error);

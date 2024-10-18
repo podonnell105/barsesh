@@ -149,12 +149,12 @@ function createInteractiveCalendar(events) {
         `;
         
         const eventImageContainer = document.getElementById('event-image');
-        console.log('Event image URL:', event.image_url);
-        if (event.image_url) {
+        console.log('Event media URL:', event.media_url);
+        if (event.media_url) {
             console.log('Attempting to set image');
-            eventImageContainer.innerHTML = `<img src="${event.image_url}" alt="Event Image" onerror="console.error('Image failed to load');">`;
+            eventImageContainer.innerHTML = `<img src="${event.media_url}" alt="Event Image" onerror="console.error('Image failed to load');">`;
         } else {
-            console.log('No image URL available');
+            console.log('No media URL available');
             eventImageContainer.innerHTML = '<p>No image available</p>';
         }
     }

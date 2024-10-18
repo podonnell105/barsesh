@@ -125,19 +125,24 @@ async function fetchAndDisplayBarImage(barID) {
         }
         const data = await response.json();
         console.log('Received image data:', data);
-        if (data.image_url) {
-            const barImageContainer = document.getElementById('bar-image');
-            barImageContainer.innerHTML = `<img src="${data.image_url}" alt="Bar Image">`;
-            console.log('Image URL set:', data.image_url);
+        const barImageContainer = document.getElementById('bar-image');
+        if (barImageContainer) {
+            if (data.media_url) {
+                barImageContainer.innerHTML = `<img src="${data.media_url}" alt="Bar Image">`;
+                console.log('Image URL set:', data.media_url);
+            } else {
+                console.log('No image available for this bar');
+                barImageContainer.innerHTML = '<p>No image available</p>';
+            }
         } else {
-            console.log('No image available for this bar');
-            const barImageContainer = document.getElementById('bar-image');
-
+            console.error('Bar image container not found');
         }
     } catch (error) {
         console.error('Error fetching bar image:', error);
         const barImageContainer = document.getElementById('bar-image');
-        barImageContainer.innerHTML = '<p>Failed to load image</p>';
+        if (barImageContainer) {
+            barImageContainer.innerHTML = '<p>Failed to load image</p>';
+        }
     }
 }
 

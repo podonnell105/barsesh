@@ -346,8 +346,7 @@ async function handleEventSubmit(event) {
             }
 
             const imageResult = await imageResponse.json();
-            eventData.image_path = imageResult.path;
-            eventData.image_url = imageResult.url;
+            eventData.media_url = imageResult.url;
         }
 
         const response = await fetch('/api/addEvent', {
@@ -367,8 +366,8 @@ async function handleEventSubmit(event) {
         console.log('Server response:', result);
 
         if (result && result.length > 0) {
-            console.log(`Image Path for event ${result[0].id}: ${result[0].image_path}`);
-            console.log(`Image URL for event ${result[0].id}: ${result[0].image_url}`);
+          
+            console.log(`Media URL for event ${result[0].id}: ${result[0].media_url}`);
         }
 
         alert('Event added successfully!');

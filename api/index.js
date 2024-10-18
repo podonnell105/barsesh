@@ -25,20 +25,19 @@ app.use(cors(corsOptions));
 
 // Initialize Firebase Admin SDK
 try {
+  const serviceAccount = require('./serviceAccountKey.json');
+
   admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: "barsesh-24655",
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
-    }),
-    databaseURL: process.env.FIREBASE_DATABASE_URL,
+    credential: admin.credential.cert(serviceAccount),
     storageBucket: process.env.FIREBASE_STORAGE_BUCKET
   });
+
   console.log('Firebase Admin SDK initialized successfully');
 } catch (error) {
   console.error('Error initializing Firebase Admin SDK:', error);
 }
 
+// Initialize Firebase Storage
 const bucket = admin.storage().bucket();
 
 // Initialize Supabase client
@@ -167,7 +166,7 @@ app.get('/api/event-image/:id', async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('events')
-      .select('image_url')
+      .select('media_url')
       .eq('id', eventID)
       .single();
 
@@ -176,8 +175,8 @@ app.get('/api/event-image/:id', async (req, res) => {
       throw error;
     }
 
-    if (data && data.image_url) {
-      res.json({ image_url: data.image_url });
+    if (data && data.media_url) {
+      res.json({ media_url: data.media_url });
     } else {
       res.status(404).json({ error: 'Image not found' });
     }
@@ -246,7 +245,7 @@ app.post('/api/uploadImage', async (req, res) => {
 
 // API endpoint to add a new event
 app.post('/api/addEvent', async (req, res) => {
-  const { title, startdate, enddate, starttime, endtime, description, barid, image_path, image_url, user_id } = req.body;
+  const { title, startdate, enddate, starttime, endtime, description, barid, media_url, user_id } = req.body;
 
   if (!title || !startdate || !starttime || !endtime || !barid || !user_id) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -263,8 +262,7 @@ app.post('/api/addEvent', async (req, res) => {
         endtime,
         description: description || null,
         barid: parseInt(barid, 10),
-        image_path: image_path || null,
-        image_url: image_url || null,
+        media_url: media_url || null,
         organiserid: user_id
       }]);
 
@@ -465,7 +463,7 @@ app.delete('/api/events/:id', authenticateUser, async (req, res) => {
     // First, fetch the event details to get the image URL
     const { data: event, error: fetchError } = await supabase
       .from('events')
-      .select('image_url')
+      .select('media_url')
       .eq('id', eventId)
       .single();
 
@@ -479,13 +477,13 @@ app.delete('/api/events/:id', authenticateUser, async (req, res) => {
     }
 
     // If there's an image associated with the event, delete it from Firebase Storage
-    if (event.image_url) {
-      const imageFileName = event.image_url.split('/').pop().split('?')[0];
-      const file = bucket.file(`event-images/${imageFileName}`);
+    if (event.media_url) {
+      const mediaFileName = event.media_url.split('/').pop().split('?')[0];
+      const file = bucket.file(`event-images/${mediaFileName}`);
 
       try {
         await file.delete();
-        console.log(`Deleted image: ${imageFileName}`);
+        console.log(`Deleted image: ${mediaFileName}`);
       } catch (deleteError) {
         console.error('Error deleting image from Firebase:', deleteError);
         // Continue with event deletion even if image deletion fails
@@ -507,6 +505,29 @@ app.delete('/api/events/:id', authenticateUser, async (req, res) => {
   } catch (error) {
     console.error('Error deleting event:', error);
     res.status(500).json({ error: 'Failed to delete event' });
+  }
+});
+
+// API endpoint to fetch bar image
+app.get('/api/bar-image/:id', async (req, res) => {
+  const barID = req.params.id;
+  try {
+    const { data, error } = await supabase
+      .from('bars')
+      .select('media_url')
+      .eq('id', barID)
+      .single();
+
+    if (error) throw error;
+
+    if (data && data.media_url) {
+      res.json({ media_url: data.media_url });
+    } else {
+      res.json({ message: 'No image available' });
+    }
+  } catch (error) {
+    console.error('Error fetching bar image:', error);
+    res.status(500).json({ error: 'Failed to fetch bar image' });
   }
 });
 
