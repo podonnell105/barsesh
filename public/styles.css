@@ -117,11 +117,25 @@ html, body {
   display: none;
   flex: 1;
   flex-direction: row;
+  
   width: 100%;
  
 }
 #event-image img {
   max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin-top: 10px;
+  
+}
+#event-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#event-image video {
+  max-width: 38%;
   height: auto;
   border-radius: 8px;
   margin-top: 10px;
@@ -336,6 +350,12 @@ html, body {
   .container {
     flex-direction: column;
   }
+  #event-image video {
+    max-width: 80%;
+    height: auto;
+    border-radius: 8px;
+    margin-top: 10px;
+  }
   #map-details-container {
     height:100%;
     overflow: auto; /* Matches the height of event-list container */
@@ -399,9 +419,12 @@ html, body {
   transition: background-color 0.3s ease;
 }
 
+
 #sign-in-form button:hover {
   background-color: #FF8787;
 }
+
+
 
 #sign-in-btn , #sign-up-btn {
   
@@ -503,18 +526,5 @@ html, body {
     right: 10px;
 }
 
-#event-media img,
-#event-media video {
-    max-width: 100%;
-    height: auto;
-}
-
-@media (max-width: 768px) {
-    #event-media video {
-        width: 100%;
-        max-height: 40vh;
-        object-fit: contain;
-    }
-}
 
 
