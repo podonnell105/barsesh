@@ -157,11 +157,18 @@ function createInteractiveCalendar(events) {
                 eventMediaContainer.innerHTML = `<img src="${event.media_url}" alt="Event Image" onerror="console.error('Image failed to load');">`;
             } else if (event.media_url.includes('event-videos')) {
                 eventMediaContainer.innerHTML = `
-                    <video controls autoplay muted playsinline>
+                    <video controls autoplay playsinline>
                         <source src="${event.media_url}" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
                 `;
+                const video = eventMediaContainer.querySelector('video');
+                video.muted = false;
+                video.play().catch(e => {
+                    console.error('Error auto-playing video:', e);
+                    video.muted = true;
+                    video.play();
+                });
             } else {
                 console.log('Unrecognized media type');
                 eventMediaContainer.innerHTML = '<p>Media type not supported</p>';
