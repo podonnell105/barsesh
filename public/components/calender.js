@@ -157,7 +157,7 @@ function createInteractiveCalendar(events) {
                 eventMediaContainer.innerHTML = `<img src="${event.media_url}" alt="Event Image" onerror="console.error('Image failed to load');">`;
             } else if (event.media_url.includes('event-videos')) {
                 eventMediaContainer.innerHTML = `
-                    <video controls>
+                    <video controls autoplay muted playsinline>
                         <source src="${event.media_url}" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>

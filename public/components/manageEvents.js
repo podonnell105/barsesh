@@ -86,18 +86,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (event.media_url) {
                     const viewMediaBtn = document.createElement('button');
                     viewMediaBtn.textContent = 'View Media';
-                    viewMediaBtn.addEventListener('click', () => displayEventMedia(event.media_url));
+                    viewMediaBtn.addEventListener('click', (e) => {
+                        e.stopPropagation(); // Prevent event from bubbling up
+                        displayEventMedia(event.media_url);
+                    });
                     eventTile.appendChild(viewMediaBtn);
                 }
+                eventTile.addEventListener('click', () => displayEventMedia(event.media_url));
                 userEventsList.appendChild(eventTile);
             });
 
             // Add event listeners for delete buttons
             const deleteButtons = document.querySelectorAll('.delete-event-btn');
             deleteButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const eventId = this.getAttribute('data-event-id');
-                    deleteEvent(eventId);
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Prevent event from bubbling up
+                    deleteEvent(this.dataset.eventId);
                 });
             });
         }
@@ -200,15 +204,24 @@ function displayEventMedia(mediaUrl) {
     const mediaContainer = document.getElementById('event-media');
     mediaContainer.innerHTML = '';
 
-    if (mediaUrl.includes('event-videos')) {
-        const video = document.createElement('video');
-        video.src = mediaUrl;
-        video.controls = true;
-        video.muted = false; // Ensure sound is on
-        mediaContainer.appendChild(video);
-    } else if (mediaUrl.includes('event-images')) {
-        const img = document.createElement('img');
-        img.src = mediaUrl;
-        mediaContainer.appendChild(img);
+    if (mediaUrl) {
+        if (mediaUrl.includes('event-videos')) {
+            const video = document.createElement('video');
+            video.src = mediaUrl;
+            video.controls = true;
+            video.muted = false; // Ensure sound is on
+            video.autoplay = true; // Set autoplay attribute
+            video.playsInline = true; // For better mobile support
+            video.oncanplay = () => {
+                video.play().catch(e => console.error('Error auto-playing video:', e));
+            };
+            mediaContainer.appendChild(video);
+        } else if (mediaUrl.includes('event-images')) {
+            const img = document.createElement('img');
+            img.src = mediaUrl;
+            mediaContainer.appendChild(img);
+        }
+    } else {
+        mediaContainer.innerHTML = '<p>No media available for this event.</p>';
     }
 }
