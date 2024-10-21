@@ -60,6 +60,8 @@ function createInteractiveCalendar(events) {
             const currentDate = new Date(Date.UTC(year, month, day));
             const formattedDate = currentDate.toISOString().split('T')[0];
             const dayEvents = events.filter(event => event.date === formattedDate);
+            const isToday = currentDate.toDateString() === new Date().toDateString();
+
             let eventInfosHTML = dayEvents.slice(0, 2).map(event => {
                 const fontSize = getFontSize(event.title);
                 if (window.matchMedia('(max-width: 768px)').matches) {
@@ -85,7 +87,7 @@ function createInteractiveCalendar(events) {
                 `;
             }
             daysHTML += `
-                <div class="day" data-date="${formattedDate}">
+                <div class="day${isToday ? ' today' : ''}" data-date="${formattedDate}">
                     <strong>${day}</strong>
                     ${eventInfosHTML}
                 </div>
@@ -95,6 +97,7 @@ function createInteractiveCalendar(events) {
         attachDayClickListeners(events);
     }
     renderCalendar(currentMonth, currentYear);
+    clickFirstEventAfterDelay();
     function attachDayClickListeners(events) {
         const dayElements = document.querySelectorAll('.day');
         dayElements.forEach(day => {
@@ -131,6 +134,7 @@ function createInteractiveCalendar(events) {
                 });
                 eventListElement.appendChild(eventItem);
             });
+            clickFirstEventAfterDelay();
         } else {
             eventListElement.innerHTML = '<p>No events found for this day.</p>';
         }
@@ -194,6 +198,28 @@ function createInteractiveCalendar(events) {
         currentYear = (currentMonth === 0) ? currentYear + 1 : currentYear;
         renderCalendar(currentMonth, currentYear);
     });
+
+    // Add this new function to show today's events
+    function showTodaysEvents() {
+        const today = new Date();
+        renderEventView(today, events);
+        document.getElementById('selected-date').textContent = "Today's Events";
+        clickFirstEventAfterDelay();
+    }
+
+    // Call this function immediately after rendering
+    showTodaysEvents();
+
+    function clickFirstEventAfterDelay() {
+        setTimeout(() => {
+            const firstEventItem = document.querySelector('.event-item');
+            if (firstEventItem) {
+                firstEventItem.click();
+            }
+        }, 5000);
+    }
+
+    clickFirstEventAfterDelay();
 }
 
 function formatTime(timeString) {
