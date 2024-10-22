@@ -148,6 +148,28 @@ html, body {
   background-color: #FFFFFF;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
   height: fit-content;
+  border: 2px solid var(--primary-color);
+  scrollbar-width: thin;
+  scrollbar-color: #FF4136 #f0f0f0;
+}
+
+#event-list-container::-webkit-scrollbar {
+  width: 12px;
+}
+
+#event-list-container::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 10px;
+}
+
+#event-list-container::-webkit-scrollbar-thumb {
+  background-color: #FF0000;
+  border-radius: 10px;
+  border: 3px solid #f0f0f0;
+}
+
+#event-list-container::-webkit-scrollbar-thumb:hover {
+  background-color: #FF3333;
 }
 #event-list-container h3 {
   margin-top: 0;
@@ -590,3 +612,7 @@ html, body {
 #back-to-calendar:hover {
     background-color: var(--secondary-color);
 }
+
+
+
+

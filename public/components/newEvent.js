@@ -461,3 +461,6 @@ function hideEventForm() {
 
 // Initialize bar options on page load
 document.addEventListener('DOMContentLoaded', populateBarOptions);
+
+// At the end of the file
+window.showEventForm = showEventForm;

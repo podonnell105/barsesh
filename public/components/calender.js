@@ -212,11 +212,8 @@ function createInteractiveCalendar(events) {
             const firstEventItem = document.querySelector('.event-item');
             if (firstEventItem) {
                 firstEventItem.click();
-                setTimeout(() => {
-                    firstEventItem.click();
-                }, 1000);
             }
-        }, 10);
+        }, 5); // Changed from 5000 to 500 milliseconds
     }
 
     clickFirstEventAfterDelay();

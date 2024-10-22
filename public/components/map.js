@@ -1,22 +1,35 @@
-let map;
 
-function initializeMap(mapboxToken) {
+
+let map;
+let markers = [];
+
+function initializeMap(mapboxToken, events) {
     mapboxgl.accessToken = mapboxToken;
+
     map = new mapboxgl.Map({
         container: 'map',
         style: 'mapbox://styles/odonnellpatrick055/cm0myh1iy00de01o3fh1h1aek',
-        center: [-5.9, 54.59],
-        zoom: 7
+        center: [0,0],
+        zoom: 2
     });
 
-    map.on('load', () => {
-        fetchAndAddMarkers(map);
-        // Force the map to resize after load
+    map.on('load', async () => {
         map.resize();
+        if (events && events.length > 0) {
+            const firstEvent = events[0];
+            if (firstEvent.longitude && firstEvent.latitude) {
+                map.resize();
+                map.flyTo({
+                    center: [firstEvent.longitude, firstEvent.latitude],
+                    zoom: 14
+                    
+                });
+                
+            }
+        }
+       
+        fetchAndAddMarkers(map);
     });
-
-    // Add a window resize listener
-    
 
     return map;
 }
@@ -62,11 +75,11 @@ async function fetchAndAddMarkers(map) {
 
                 if (!isNaN(lng) && !isNaN(lat)) {
                     addMarker(map, lng, lat, marker.name, marker.address, marker.id);
-                    bounds.extend([lng, lat]);
                 }
             });
-
-            map.fitBounds(bounds, { padding: 90 });
+            // Set lat and long to first event
+           
+        
         }
     } catch (error) {
         console.error('Error fetching markers:', error);

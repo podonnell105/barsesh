@@ -15,8 +15,9 @@ function createHTMLElements() {
     <div id="header">
         <h3>BarSesh | Belfast</h3>
         <div id="button-container">
-            <button id="sign-in-btn">Sign In</button>
-            <button id="sign-up-btn">Sign Up</button>
+            <button id="back-to-calendar">View Calendar</button>
+            <button style="display: none;"id="sign-in-btn">Sign In</button>
+            <button style="display: none;"id="sign-up-btn">Sign Up</button>
         </div>
     </div>
     <div id="main-container" class="container">
@@ -25,9 +26,6 @@ function createHTMLElements() {
         </div>
         <div id="event-map-container">
             <div id="event-list-container">
-                <div class="calendar-button-container">
-                    <button id="back-to-calendar">View Calendar</button>
-                </div>
                 <div class="day-navigation">
                     <button id="prev-day-btn" class="arrow-btn">&#9664;</button>
                     <h3 id="selected-date"></h3>
@@ -91,9 +89,9 @@ async function initializePage() {
         return;
     }
 
-    window.map = initializeMap(mapboxToken);
-
     const events = await fetchEvents();
+    window.map = initializeMap(mapboxToken, events);
+
     if (events.length > 0) {
         const calendar = createCalendar(events);
         console.log('Calendar created with events');
