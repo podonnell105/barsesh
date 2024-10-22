@@ -25,8 +25,14 @@ function createHTMLElements() {
         </div>
         <div id="event-map-container">
             <div id="event-list-container">
-                <button id="back-to-calendar">Back</button>
-                <h3 id="selected-date"></h3>
+                <div class="calendar-button-container">
+                    <button id="back-to-calendar">View Calendar</button>
+                </div>
+                <div class="day-navigation">
+                    <button id="prev-day-btn" class="arrow-btn">&#9664;</button>
+                    <h3 id="selected-date"></h3>
+                    <button id="next-day-btn" class="arrow-btn">&#9654;</button>
+                </div>
                 <div id="event-list"></div>
             </div>
             <div id="map-details-container">
@@ -85,15 +91,16 @@ async function initializePage() {
         return;
     }
 
-    const map = initializeMap(mapboxToken);
+    window.map = initializeMap(mapboxToken);
 
     const events = await fetchEvents();
     if (events.length > 0) {
-        createCalendar(events);
+        const calendar = createCalendar(events);
         console.log('Calendar created with events');
+        calendar.showTodaysEvents(); // This will show today's events immediately
     } else {
         console.log('No events fetched');
-        document.getElementById('calendar').innerHTML = '<p>No events available</p>';
+        document.getElementById('event-list').innerHTML = '<p>No events available</p>';
     }
 }
 

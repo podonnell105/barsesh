@@ -16,9 +16,7 @@ function initializeMap(mapboxToken) {
     });
 
     // Add a window resize listener
-    window.addEventListener('resize', () => {
-        map.resize();
-    });
+    
 
     return map;
 }

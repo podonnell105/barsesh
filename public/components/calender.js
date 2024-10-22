@@ -1,7 +1,3 @@
-function createCalendar(events) {
-  
-    createInteractiveCalendar(events);
-}
 function createInteractiveCalendar(events) {
     const calendarContainer = document.getElementById('calendar');
     calendarContainer.innerHTML = '';
@@ -135,12 +131,14 @@ function createInteractiveCalendar(events) {
                 eventListElement.appendChild(eventItem);
             });
             clickFirstEventAfterDelay();
+
+            // Focus map on the first event's location
+            const firstEvent = dayEvents[0];
+            if (firstEvent.latitude && firstEvent.longitude) {
+                focusMapOnLocation(firstEvent.latitude, firstEvent.longitude);
+            }
         } else {
             eventListElement.innerHTML = '<p>No events found for this day.</p>';
-        }
-        if (dayEvents.length > 0) {
-            displayBar(dayEvents[0].barid);
-            displayEventDetails(dayEvents[0]);
         }
     }
     function displayEventDetails(event) {
@@ -199,33 +197,75 @@ function createInteractiveCalendar(events) {
         renderCalendar(currentMonth, currentYear);
     });
 
-    // Add this new function to show today's events
     function showTodaysEvents() {
-        const today = new Date();
-        renderEventView(today, events);
+        currentDate = new Date();
+        renderEventView(currentDate, events);
         document.getElementById('selected-date').textContent = "Today's Events";
         clickFirstEventAfterDelay();
     }
+    
 
-    // Call this function immediately after rendering
-    showTodaysEvents();
+    // Don't call showTodaysEvents() here anymore
 
     function clickFirstEventAfterDelay() {
         setTimeout(() => {
             const firstEventItem = document.querySelector('.event-item');
             if (firstEventItem) {
                 firstEventItem.click();
+                setTimeout(() => {
+                    firstEventItem.click();
+                }, 1000);
             }
-        }, 5000);
+        }, 10);
     }
 
     clickFirstEventAfterDelay();
+
+    let currentDate = new Date();
+
+    document.getElementById('next-day-btn').addEventListener('click', () => {
+        currentDate.setDate(currentDate.getDate() + 1);
+        renderEventView(currentDate, events);
+        updateSelectedDateText();
+    });
+
+    document.getElementById('prev-day-btn').addEventListener('click', () => {
+        currentDate.setDate(currentDate.getDate() - 1);
+        renderEventView(currentDate, events);
+        updateSelectedDateText();
+    });
+
+    function updateSelectedDateText() {
+        const selectedDateElement = document.getElementById('selected-date');
+        if (currentDate.toDateString() === new Date().toDateString()) {
+            selectedDateElement.textContent = "Today's Events";
+        } else {
+            selectedDateElement.textContent = currentDate.toDateString();
+        }
+    }
+
+    return {
+        showTodaysEvents: showTodaysEvents,
+        renderCalendar: renderCalendar,
+        renderEventView: renderEventView
+    };
+}
+
+function createCalendar(events) {
+    const calendar = createInteractiveCalendar(events);
+    return calendar;
 }
 
 function formatTime(timeString) {
     if (!timeString) return '';
     const [hours, minutes] = timeString.split(':');
     return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+}
+
+function focusMapOnLocation(latitude, longitude) {
+    if (window.map) {
+        window.map.setView([latitude, longitude], 15);
+    }
 }
 
 export { createCalendar };
