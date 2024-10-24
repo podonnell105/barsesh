@@ -12,14 +12,20 @@ function logButtonClick(buttonName) {
 function createHTMLElements() {
     console.log('Creating HTML elements...');
     document.body.innerHTML = `
-    <div id="header">
-        <h3>BarSesh | Belfast</h3>
-        <div id="button-container">
-            <button id="back-to-calendar">View Calendar</button>
-            <button style="display: none;"id="sign-in-btn">Sign In</button>
-            <button style="display: none;"id="sign-up-btn">Sign Up</button>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <h1>BarSesh</h1>
+            </div>
+            <span class="location-tag"></span>
+        
+        <div class="nav-controls">
+            <button id="back-to-calendar" class="nav-btn">View Calendar</button>
+            <div class="auth-buttons">
+                <button id="sign-in-btn" class="nav-btn" style="display: none;">Sign In</button>
+                <button id="sign-up-btn" class="nav-btn" style="display: none;">Sign Up</button>
+            </div>
         </div>
-    </div>
+    </nav>
     <div id="main-container" class="container">
         <div id="calendar-container">
             <div id="calendar"></div>
@@ -27,19 +33,32 @@ function createHTMLElements() {
         <div id="event-map-container">
             <div id="event-list-container">
                 <div class="day-navigation">
-                    <button id="prev-day-btn" class="arrow-btn">&#9664;</button>
+                    <button id="prev-day-btn" class="arrow-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                    </button>
                     <h3 id="selected-date"></h3>
-                    <button id="next-day-btn" class="arrow-btn">&#9654;</button>
+                    <button id="next-day-btn" class="arrow-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </button>
                 </div>
                 <div id="event-list"></div>
             </div>
             <div id="map-details-container">
-                <div id="event-image"></div>
-                <div id="event-details"></div>
-                <div id="map-container">
+            <div id="map-container">
                     <div id="map"></div>
                 </div>
+                <div id="event-details"></div>
                 <div id="bar-details"></div>
+                <div id="event-image"></div>
+                
+                
+                
             </div>
         </div>
         <div id="event-form-container" style="display: none;"></div>

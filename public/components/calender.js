@@ -7,9 +7,19 @@ function createInteractiveCalendar(events) {
     const calendarHTML = `
         <div id="month-view">
             <div class="calendar-header">
-                <button id="prev-month">←</button>
+                <button id="prev-month" class="arrow-btn calendar-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="20" y1="12" x2="4" y2="12"></line>
+                        <polyline points="10 18 4 12 10 6"></polyline>
+                    </svg>
+                </button>
                 <h2 id="current-month-year"></h2>
-                <button id="next-month">→</button>
+                <button id="next-month" class="arrow-btn calendar-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="4" y1="12" x2="20" y2="12"></line>
+                        <polyline points="14 6 20 12 14 18"></polyline>
+                    </svg>
+                </button>
             </div>
             <div class="weekdays"></div>
             <div class="calendar-body days"></div>
@@ -91,6 +101,7 @@ function createInteractiveCalendar(events) {
         }
         daysContainer.innerHTML = daysHTML;
         attachDayClickListeners(events);
+        document.getElementById('back-to-calendar').style.display = 'none';
     }
     renderCalendar(currentMonth, currentYear);
     clickFirstEventAfterDelay();
@@ -100,6 +111,7 @@ function createInteractiveCalendar(events) {
             day.addEventListener('click', () => {
                 const date = new Date(day.dataset.date);
                 renderEventView(date, events);
+                document.getElementById('back-to-calendar').style.display = 'block';
             });
         });
     }
@@ -140,6 +152,7 @@ function createInteractiveCalendar(events) {
         } else {
             eventListElement.innerHTML = '<p>No events found for this day.</p>';
         }
+        document.getElementById('back-to-calendar').style.display = 'block';
     }
     function displayEventDetails(event) {
         console.log('Displaying event details:', event);
@@ -184,6 +197,7 @@ function createInteractiveCalendar(events) {
     function backToCalendar() {
         document.getElementById('event-map-container').style.display = 'none';
         document.getElementById('calendar-container').style.display = 'block';
+        document.getElementById('back-to-calendar').style.display = 'none';
     }
     document.getElementById('back-to-calendar').addEventListener('click', backToCalendar);
     document.getElementById('prev-month').addEventListener('click', () => {
